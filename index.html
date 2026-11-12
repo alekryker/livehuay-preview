@@ -49,7 +49,7 @@
 })();
 
 </script>
-<script>try{if(localStorage.getItem("livehuay_theme_v165")!=="luxe")document.documentElement.classList.add("calm-v165")}catch(e){document.documentElement.classList.add("calm-v165")}</script>
+<script>(function(){var t;try{t=localStorage.getItem("livehuay_theme_v166")}catch(e){}if(t==="calm")document.documentElement.classList.add("calm-v165");else if(t!=="luxe")document.documentElement.classList.add("luxe2-v166")})()</script>
   <!-- V150: HANOI NORMAL LIVE CURRENT-DATE VERIFICATION -->
   <!-- V149: SINGAPORE STI SOURCE FIX -->
   <!-- V147: NIGHT LAO DEVELOPMENT CARD -->
@@ -5981,22 +5981,93 @@ html.calm-v165 ::-webkit-scrollbar-track{background:transparent}
 html.calm-v165 ::-webkit-scrollbar-thumb{background:#3a4b6e;border:2px solid transparent;background-clip:padding-box}
 @media(prefers-reduced-motion:reduce){html.calm-v165 .live{animation:none !important}}
 </style>
+<style id="luxe2-ui-v166">
+/* ===== V166 ธีมแดงทอง "หรูใหม่" (ค่าเริ่มต้น) =====
+   แนวเดิม (แดง-ทอง) แต่อ่านง่าย สบายตาขึ้น: เลขผลชัด, แสงวิ่ง/เรืองแสงน้อยลง
+   เปลี่ยนเฉพาะสี/เงา/เอฟเฟกต์ — ไม่แตะขนาด เส้นขอบ ระยะ (ตำแหน่ง iframe เดิมทุกพิกเซล) */
+html.luxe2-v166{--l2-gold:#f3c969;--l2-gold-d:#b8862b;--l2-ivory:#fffaf0;--l2-top:#b3121f;--l2-bottom:#0d7a3e;--l2-wine:#2a0608}
+html.luxe2-v166 body{
+  background:
+    radial-gradient(900px 520px at 50% -10%,rgba(190,24,36,.55),transparent 65%),
+    radial-gradient(700px 500px at 100% 100%,rgba(140,14,24,.35),transparent 60%),
+    linear-gradient(180deg,#3a070b 0%,#200406 55%,#140304 100%) !important;
+  background-attachment:fixed !important}
+/* ฉากหลัง: เหลือแค่แสงนุ่ม ๆ ไม่มีตาราง/ประกายวิ่ง */
+html.luxe2-v166 #luxeBg .luxe-grid,html.luxe2-v166 #luxeBg canvas{display:none}
+html.luxe2-v166 #luxeBg .luxe-aurora{opacity:.22;animation-duration:60s !important}
+/* หัว: ทองเรียบ ไม่มีลำแสงหมุน แสงกวาดช้าลง */
+html.luxe2-v166 .header::before{display:none}
+html.luxe2-v166 .header::after{animation-duration:14s !important;opacity:.6}
+html.luxe2-v166 .header{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.25)) padding-box,
+    linear-gradient(180deg,#8f0f18,#5c070d) padding-box,
+    linear-gradient(135deg,#f8e2a0,#c9952e 40%,#f3c969 60%,#9c6b16) border-box !important;
+  box-shadow:0 10px 26px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.18) !important}
+html.luxe2-v166 .title{text-shadow:0 2px 6px rgba(0,0,0,.45) !important}
+html.luxe2-v166 .title b{animation-duration:9s !important;filter:drop-shadow(0 2px 0 rgba(70,35,0,.6)) !important}
+html.luxe2-v166 .board-date{color:#ffe9b8 !important;background:rgba(0,0,0,.28) !important;box-shadow:inset 0 0 0 1px rgba(243,201,105,.45) !important}
+html.luxe2-v166 .ticker{background:linear-gradient(180deg,#1c0405,#120203) padding-box,linear-gradient(90deg,#c9952e,#f3c969,#c9952e) border-box !important;box-shadow:none !important}
+html.luxe2-v166 .ticker-text{color:#fff3dc !important}
+html.luxe2-v166 .live{animation-duration:2.6s !important}
+
+/* การ์ด: แดงไวน์ไล่เฉด ขอบทองเรียบ เงาดำนุ่ม (ไม่เรืองแสงแดงรอบการ์ด) ไม่มีแสงกวาด */
+html.luxe2-v166 .card{
+  background:
+    linear-gradient(180deg,rgba(255,236,190,.10),transparent 38%) padding-box,
+    linear-gradient(180deg,#8a0f18 0%,#5e080e 55%,#3d0509 100%) padding-box,
+    linear-gradient(150deg,#f8e2a0 0%,#c9952e 35%,#8a5f14 55%,#f3c969 80%,#f8e2a0 100%) border-box !important;
+  box-shadow:0 8px 20px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.14) !important}
+html.luxe2-v166 .card:hover{box-shadow:0 10px 24px rgba(0,0,0,.5),0 0 14px rgba(243,201,105,.35),inset 0 1px 0 rgba(255,255,255,.18) !important}
+html.luxe2-v166 .card::after{display:none}
+html.luxe2-v166 .name{color:#fff !important;text-shadow:0 1px 3px rgba(0,0,0,.5) !important}
+html.luxe2-v166 .time{color:#f6d9a0 !important;opacity:1 !important}
+html.luxe2-v166 .flag{box-shadow:0 0 0 2px rgba(60,30,0,.5),0 3px 8px rgba(0,0,0,.45) !important}
+html.luxe2-v166 .viewer{border-color:#e7bd5c !important;box-shadow:0 3px 10px rgba(0,0,0,.45) !important}
+
+/* ช่องผล: งาช้างเรียบ ตัวเลขคมชัด — บน = แดงเข้ม (กรอบแดง), ล่าง = เขียวเข้ม (กรอบเขียว) */
+html.luxe2-v166 .result{
+  background:var(--l2-ivory) !important;background-image:linear-gradient(180deg,#fffdf7,#fff3d6) !important;
+  border-color:#e2b552 !important;color:var(--l2-top) !important;-webkit-text-fill-color:var(--l2-top) !important;
+  text-shadow:none !important;letter-spacing:2px;font-variant-numeric:tabular-nums;
+  box-shadow:inset 0 -3px 0 rgba(184,134,43,.18),0 3px 8px rgba(0,0,0,.35) !important}
+html.luxe2-v166 .result::after{display:none !important}
+html.luxe2-v166 .results .result:last-child,html.luxe2-v166 .result[id$="-bottom"]{color:var(--l2-bottom) !important;-webkit-text-fill-color:var(--l2-bottom) !important}
+html.luxe2-v166 .lao-result-four{color:var(--l2-top) !important;-webkit-text-fill-color:var(--l2-top) !important}
+/* ยังไม่มีผล: ช่องเข้มเรียบ ขีดสีทองจาง ไม่กระพริบ */
+html.luxe2-v166 .result.waiting,html.luxe2-v166 .result.l2-empty,
+html.luxe2-v166 .results .result.l2-empty:last-child,html.luxe2-v166 .result.l2-empty[id$="-bottom"]{
+  background:rgba(0,0,0,.30) !important;background-image:none !important;border-color:rgba(243,201,105,.35) !important;
+  color:rgba(243,201,105,.55) !important;-webkit-text-fill-color:rgba(243,201,105,.55) !important;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.45) !important;animation:none !important}
+html.luxe2-v166 .result.luxe-drawing{animation:luxeWait 2.4s linear infinite !important}
+
+/* ปุ่มเล็ก + แถบล่าง */
+html.luxe2-v166 .source,html.luxe2-v166 .live-open-btn,html.luxe2-v166 .stock-close-btn{background:rgba(0,0,0,.28) !important;color:#f6d9a0 !important}
+html.luxe2-v166 .bottom{
+  background:linear-gradient(180deg,#8f0f18,#5c070d) padding-box,linear-gradient(135deg,#f8e2a0,#c9952e 40%,#f3c969 60%,#9c6b16) border-box !important;
+  box-shadow:0 -4px 18px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.16) !important}
+html.luxe2-v166 .clock{text-shadow:0 0 6px rgba(255,196,48,.55) !important}
+html.luxe2-v166 .msg{color:#fff3dc !important}
+html.luxe2-v166,html.luxe2-v166 *{scrollbar-color:#8a5f14 rgba(0,0,0,.3)}
+@media(prefers-reduced-motion:reduce){html.luxe2-v166 .header::after,html.luxe2-v166 .result.luxe-drawing{animation:none !important}}
+</style>
 <script id="calm-ui-v165-js">
-/* V165 สลับธีม: ค่าเริ่มต้น = สบายตา • เก็บในเครื่อง (localStorage) */
+/* V166 ธีม 3 แบบ: luxe2 = แดงทองหรูใหม่ (ค่าเริ่มต้น) • luxe = แดงทองเดิม • calm = สบายตาโทนน้ำเงิน — จำค่าในเครื่อง */
 (function(){
-  var KEY='livehuay_theme_v165',root=document.documentElement;
-  function get(){try{return localStorage.getItem(KEY)||'calm';}catch(e){return 'calm';}}
-  function apply(t){root.classList.toggle('calm-v165',t!=='luxe');if(btn)btn.textContent='🎨 ธีม: '+(t==='luxe'?'ทองแดงเดิม':'สบายตา');}
+  var KEY='livehuay_theme_v166',root=document.documentElement,NAMES={luxe2:'แดงทองใหม่',luxe:'แดงทองเดิม',calm:'น้ำเงินสบายตา'},ORDER=['luxe2','luxe','calm'];
+  function get(){var t;try{t=localStorage.getItem(KEY);}catch(e){}return NAMES[t]?t:'luxe2';}
   var btn=null;
-  window.setThemeV165=function(t){t=t==='luxe'?'luxe':'calm';try{localStorage.setItem(KEY,t);}catch(e){}apply(t);};
+  function apply(t){root.classList.toggle('luxe2-v166',t==='luxe2');root.classList.toggle('calm-v165',t==='calm');if(btn)btn.textContent='🎨 ธีม: '+NAMES[t];}
+  window.setThemeV165=function(t){if(!NAMES[t])t='luxe2';try{localStorage.setItem(KEY,t);}catch(e){}apply(t);};
   var anchor=document.querySelector('#topMenu button[onclick^="showMediaDockV142"]');
   if(anchor){btn=document.createElement('button');btn.type='button';
-    btn.addEventListener('click',function(){window.setThemeV165(get()==='luxe'?'calm':'luxe');});
+    btn.addEventListener('click',function(){window.setThemeV165(ORDER[(ORDER.indexOf(get())+1)%ORDER.length]);});
     anchor.parentNode.insertBefore(btn,anchor);}
   apply(get());
   window.addEventListener('storage',function(e){if(e.key===KEY)apply(get());});
-  /* ช่องผลที่ยังว่าง ("-") ให้เป็นสีจาง จะได้ไม่แย่งสายตากับเลขที่ออกแล้ว */
-  function mark(){document.querySelectorAll('.result').forEach(function(el){var t=el.textContent.trim();el.classList.toggle('calm-empty',!t||/^[-–—\s]+$/.test(t));});}
+  /* ช่องผลที่ยังว่าง ("-") ให้เป็นสีจาง */
+  function mark(){document.querySelectorAll('.result').forEach(function(el){var t=el.textContent.trim(),e=!t||/^[-–—\s]+$/.test(t);el.classList.toggle('calm-empty',e);el.classList.toggle('l2-empty',e);});}
   var bd=document.getElementById('board');
   if(bd&&window.MutationObserver){var pend=false;new MutationObserver(function(){if(pend)return;pend=true;requestAnimationFrame(function(){pend=false;mark();});}).observe(bd,{subtree:true,childList:true,characterData:true});}
   mark();
