@@ -49,7 +49,7 @@
 })();
 
 </script>
-
+<script>try{if(localStorage.getItem("livehuay_theme_v165")!=="luxe")document.documentElement.classList.add("calm-v165")}catch(e){document.documentElement.classList.add("calm-v165")}</script>
   <!-- V150: HANOI NORMAL LIVE CURRENT-DATE VERIFICATION -->
   <!-- V149: SINGAPORE STI SOURCE FIX -->
   <!-- V147: NIGHT LAO DEVELOPMENT CARD -->
@@ -5567,7 +5567,7 @@ function openAdminV89(){ window.location.href='https://livehuay.netlify.app/admi
   $('.g-head').addEventListener('pointerup',end);$('.g-head').addEventListener('pointercancel',end);
   window.addEventListener('resize',function(){if(!box.hidden)clamp();});
   /* V158: แก้ชื่อ/สุ่มในแถบอื่น → แถบนี้อัปเดตตาม */
-  window.addEventListener('storage',function(e){if(e.key!==LS)return;var n=load();S.names=n.names||{};S.sets=n.sets||{};S.auto=n.auto!==undefined?n.auto:S.auto;if(!S.auto||!cur){var k=n.key;var it=items().filter(function(i){return i.key===k;})[0];if(it&&!S.auto)cur=it;}autoChk.checked=!!S.auto;if(cur){fillSelect();sel.value=cur.key;render();}});
+  window.addEventListener('storage',function(e){if(e.key!==LS)return;var n=load();S.names=n.names||{};S.sets=n.sets||{};/* V165: ปิดกรอบที่แถบอื่น → แถบนี้ปิดตาม (กันแถบที่เปิดค้างบันทึก open กลับ แล้วเด้งขึ้นหน้าไลฟ์ตอนรีโหลด) */if(n.open===false){S.open=false;box.hidden=true;}S.auto=n.auto!==undefined?n.auto:S.auto;if(!S.auto||!cur){var k=n.key;var it=items().filter(function(i){return i.key===k;})[0];if(it&&!S.auto)cur=it;}autoChk.checked=!!S.auto;if(cur){fillSelect();sel.value=cur.key;render();}});
 
   window.showGuideV157=function(){
     box.hidden=false;S.open=true;save();
@@ -5717,6 +5717,7 @@ function openAdminV89(){ window.location.href='https://livehuay.netlify.app/admi
             if(v&&typeof v==='object'&&v.name!==undefined){var n=gb.querySelector('.g-name');n.value=String(v.name).slice(0,40);n.dispatchEvent(new Event('input'));n.blur();}
           }
           break;
+        case 'theme':if(window.setThemeV165)setThemeV165(v);break;
         case 'voice':
           if(v==='on'||v==='off'){if(window.setVoiceOnV163)setVoiceOnV163(v==='on');}
           else if(v==='test'&&window.voiceSayV163)voiceSayV163('ทดสอบเสียงประกาศครับ ได้ยินชัดไหมครับพี่ๆ',true);
@@ -5863,6 +5864,142 @@ function openAdminV89(){ window.location.href='https://livehuay.netlify.app/admi
   /* เปิดค้างไว้จากครั้งก่อน: เบราว์เซอร์ต้องการการแตะ 1 ครั้งก่อนพูดได้ */
   if(S.on&&navigator.userActivation&&!navigator.userActivation.hasBeenActive){
     setTimeout(function(){if(!navigator.userActivation.hasBeenActive)toast('🔊 เสียงประกาศเปิดอยู่ — แตะหน้าจอ 1 ครั้งเพื่อให้เว็บพูดได้',10000);},1500);}
+})();
+</script>
+<style id="calm-ui-v165">
+/* ===== V165 ธีมสบายตา (ค่าเริ่มต้น) =====
+   เปลี่ยนเฉพาะสี/เงา/เอฟเฟกต์ — ไม่แตะขนาด/ระยะของการ์ดและ iframe (ตำแหน่งครอปเดิมทุกพิกเซล)
+   สลับกลับธีมทองแดงเดิมได้ที่เมนู → 🎨 ธีม */
+html.calm-v165{
+  --c-bg:#0e1320;--c-bg2:#121a2b;--c-panel:#172034;--c-panel2:#1b263d;--c-line:#2b3956;--c-line2:#3a4b6e;
+  --c-text:#eef2f8;--c-mute:#9fb0cc;--c-top:#ffd166;--c-bottom:#5eead4;--c-live:#ef4444;--c-accent:#f5b942;
+  background:var(--c-bg) !important;
+}
+html.calm-v165 body{
+  background:linear-gradient(180deg,var(--c-bg2),var(--c-bg) 420px) !important;background-attachment:scroll !important;color:var(--c-text)}
+html.calm-v165 #luxeBg,html.calm-v165 .luxe-orn{display:none !important}
+/* ปิดเอฟเฟกต์วิ่ง/แสงกวาดทั้งหมด (ลดความลายตา) */
+html.calm-v165 .header::before,html.calm-v165 .header::after,html.calm-v165 .card::after,html.calm-v165 .result::after{display:none !important}
+html.calm-v165 .board.luxe-enter .card{animation:none !important}
+
+/* ส่วนหัว */
+html.calm-v165 .header{
+  background:var(--c-panel) !important;border-color:var(--c-line) !important;
+  box-shadow:0 6px 18px rgba(0,0,0,.35) !important}
+html.calm-v165 .live{
+  background:var(--c-live) !important;border:0 !important;color:#fff !important;text-shadow:none !important;
+  animation:calmLive 2.4s ease-out infinite !important}
+@keyframes calmLive{0%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}100%{box-shadow:0 0 0 12px rgba(239,68,68,0)}}
+html.calm-v165 .title{color:var(--c-text) !important;text-shadow:none !important}
+html.calm-v165 .title b{
+  background:none !important;-webkit-text-fill-color:var(--c-accent) !important;color:var(--c-accent) !important;
+  filter:none !important;animation:none !important}
+html.calm-v165 .board-date{color:var(--c-mute) !important;background:rgba(255,255,255,.04) !important;box-shadow:inset 0 0 0 1px var(--c-line) !important;text-shadow:none !important}
+html.calm-v165 .ticker{background:#0f1726 !important;border-color:var(--c-line) !important;box-shadow:none !important}
+html.calm-v165 .ticker-label{background:var(--c-live) !important;color:#fff !important;box-shadow:none !important}
+html.calm-v165 .ticker-text{color:#dbe4f3 !important;text-shadow:none !important}
+html.calm-v165 .ticker-text b{color:var(--c-accent) !important;text-shadow:none !important}
+
+/* เมนู */
+html.calm-v165 .menu-toggle{background:var(--c-panel2) !important;border-color:var(--c-line2) !important;color:var(--c-text) !important;box-shadow:0 4px 12px rgba(0,0,0,.4) !important}
+html.calm-v165 .menu-toggle.active{background:var(--c-accent) !important;color:#1b1300 !important}
+html.calm-v165 .toolbar{background:#121a2b !important;border-color:var(--c-line) !important}
+html.calm-v165 .toolbar button{background:rgba(255,255,255,.05) !important;color:var(--c-text) !important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06) !important}
+html.calm-v165 .toolbar button:hover{background:rgba(255,255,255,.10) !important;box-shadow:inset 0 0 0 1px var(--c-line2) !important}
+html.calm-v165 .toolbar button.active,html.calm-v165 .toolbar button.board-menu-btn.active{background:var(--c-accent) !important;color:#1b1300 !important;box-shadow:none !important}
+html.calm-v165 .toolbar button.result-switch.active{background:#16a34a !important;color:#fff !important}
+html.calm-v165 .toolbar .menu-section{color:var(--c-mute) !important}
+html.calm-v165 .toolbar .menu-divider{background:var(--c-line) !important}
+
+/* การ์ด */
+html.calm-v165 .card{
+  background:var(--c-panel) !important;border-color:var(--c-line) !important;
+  box-shadow:0 4px 14px rgba(0,0,0,.30) !important;filter:none !important}
+html.calm-v165 .card:hover{box-shadow:0 6px 18px rgba(0,0,0,.4) !important}
+html.calm-v165 .name{color:var(--c-text) !important;text-shadow:none !important}
+html.calm-v165 .time{color:var(--c-mute) !important;opacity:1 !important}
+html.calm-v165 .flag{border-color:var(--c-line2) !important;box-shadow:0 2px 6px rgba(0,0,0,.35) !important}
+html.calm-v165 .viewer{border-color:var(--c-line2) !important;box-shadow:0 2px 8px rgba(0,0,0,.35) !important}
+html.calm-v165 .live-facebook-viewer,html.calm-v165 .lao-result-panel{border-color:var(--c-line2) !important;box-shadow:0 2px 8px rgba(0,0,0,.35) !important}
+html.calm-v165 .lao-result-panel{background:var(--c-panel2) !important}
+html.calm-v165 .lao-result-main,html.calm-v165 .lao-result-cell{background:#0f1726 !important;border-color:var(--c-line) !important;box-shadow:none !important}
+html.calm-v165 .lao-result-label{color:var(--c-mute) !important}
+
+/* ช่องผล: พื้นเข้มเรียบ ตัวเลขใหญ่สีสว่าง — บน = เหลืองอำพัน, ล่าง = เขียวมิ้นต์ */
+html.calm-v165 .result{
+  background:#0b1220 !important;border-color:var(--c-line2) !important;
+  color:var(--c-top) !important;-webkit-text-fill-color:currentColor !important;
+  text-shadow:none !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+  font-variant-numeric:tabular-nums;letter-spacing:2px}
+html.calm-v165 .results .result:last-child,html.calm-v165 .result[id$="-bottom"]{color:var(--c-bottom) !important}
+html.calm-v165 .lao-result-four{color:var(--c-text) !important}
+html.calm-v165 .result.waiting{
+  color:#56657f !important;background:#0f1726 !important;border-color:var(--c-line) !important;animation:none !important}
+html.calm-v165 .result.luxe-pop{animation:calmPop .6s ease-out}
+@keyframes calmPop{0%{box-shadow:0 0 0 0 rgba(255,209,102,.7)}100%{box-shadow:0 0 0 10px rgba(255,209,102,0)}}
+html.calm-v165 .result.luxe-drawing{
+  background:#0f1726 !important;border-color:var(--c-accent) !important;box-shadow:none !important;
+  animation:none !important;filter:none !important}
+html.calm-v165 .result.luxe-drawing::before{border-color:rgba(245,185,66,.25) !important;border-top-color:var(--c-accent) !important;border-right-color:var(--c-accent) !important;box-shadow:none !important}
+html.calm-v165 .result.luxe-drawing::after{display:block !important;color:var(--c-accent) !important;text-shadow:none !important}
+
+/* ปุ่มเล็ก/ส่วนอื่นในการ์ด */
+html.calm-v165 .source,html.calm-v165 .live-open-btn,html.calm-v165 .stock-close-btn{
+  background:rgba(255,255,255,.05) !important;color:var(--c-mute) !important;box-shadow:inset 0 0 0 1px var(--c-line) !important;border-color:transparent !important}
+html.calm-v165 .source:hover,html.calm-v165 .live-open-btn:hover,html.calm-v165 .stock-close-btn:hover{background:rgba(255,255,255,.10) !important;color:var(--c-text) !important}
+html.calm-v165 .stock-closed-cover{background:#0f1726 !important}
+html.calm-v165 .stock-closed-text{background:none !important;-webkit-text-fill-color:var(--c-mute) !important;color:var(--c-mute) !important;filter:none !important}
+html.calm-v165 .adjust{background:rgba(0,0,0,.3) !important;box-shadow:inset 0 0 0 1px var(--c-line) !important}
+html.calm-v165 .adjust-title{color:var(--c-accent) !important}
+html.calm-v165 .adjust button{background:#e8edf5 !important;color:#1b263d !important}
+
+/* แถบล่าง */
+html.calm-v165 .bottom{background:var(--c-panel) !important;border-color:var(--c-line) !important;box-shadow:0 -2px 14px rgba(0,0,0,.3) !important}
+html.calm-v165 .clock{
+  background:#0b1220 !important;color:var(--c-text) !important;text-shadow:none !important;
+  box-shadow:inset 0 0 0 1px var(--c-line2) !important}
+html.calm-v165 .msg{color:#dbe4f3 !important;text-shadow:none !important}
+
+/* เครื่องเล่นลอย */
+html.calm-v165 .media-dock-v142{background:#0b1220 !important;border-color:var(--c-line2) !important;box-shadow:0 12px 32px rgba(0,0,0,.6) !important}
+html.calm-v165 .media-dock-head-v142{background:var(--c-panel2) !important}
+html.calm-v165 .media-dock-title-v142{color:var(--c-text) !important}
+html.calm-v165 .media-dock-controls-v142 button{border-color:var(--c-line2) !important;color:var(--c-text) !important}
+html.calm-v165 .media-dock-url-v142,html.calm-v165 .media-dock-hint-v142{background:#0f1726 !important;color:var(--c-mute) !important}
+html.calm-v165 .media-dock-url-v142 button{background:var(--c-accent) !important;color:#1b1300 !important;border-color:transparent !important}
+html.calm-v165 .media-dock-v142.stealth{background:transparent !important;border:0 !important;box-shadow:none !important}
+
+/* กรอบแนวทางหวย + เสียงประกาศ */
+html.calm-v165 #guideV157{background:var(--c-panel) !important;border-color:var(--c-line2) !important}
+html.calm-v165 #voiceV163{background:var(--c-panel);border-color:var(--c-line2);color:var(--c-text)}
+html.calm-v165 #voiceV163 h3{color:var(--c-accent)}
+html.calm-v165 #voiceV163 select,html.calm-v165 #voiceV163 input[type=number]{background:#0f1726;border-color:var(--c-line2);color:var(--c-text)}
+html.calm-v165 #voiceV163 .v-row button{background:#0f1726;border-color:var(--c-line2);color:var(--c-text)}
+html.calm-v165 .result.calm-empty,html.calm-v165 .results .result.calm-empty:last-child,html.calm-v165 .result.calm-empty[id$="-bottom"]{color:#4b5a75 !important}
+html.calm-v165,html.calm-v165 *{scrollbar-color:#3a4b6e transparent}
+html.calm-v165 ::-webkit-scrollbar-track{background:transparent}
+html.calm-v165 ::-webkit-scrollbar-thumb{background:#3a4b6e;border:2px solid transparent;background-clip:padding-box}
+@media(prefers-reduced-motion:reduce){html.calm-v165 .live{animation:none !important}}
+</style>
+<script id="calm-ui-v165-js">
+/* V165 สลับธีม: ค่าเริ่มต้น = สบายตา • เก็บในเครื่อง (localStorage) */
+(function(){
+  var KEY='livehuay_theme_v165',root=document.documentElement;
+  function get(){try{return localStorage.getItem(KEY)||'calm';}catch(e){return 'calm';}}
+  function apply(t){root.classList.toggle('calm-v165',t!=='luxe');if(btn)btn.textContent='🎨 ธีม: '+(t==='luxe'?'ทองแดงเดิม':'สบายตา');}
+  var btn=null;
+  window.setThemeV165=function(t){t=t==='luxe'?'luxe':'calm';try{localStorage.setItem(KEY,t);}catch(e){}apply(t);};
+  var anchor=document.querySelector('#topMenu button[onclick^="showMediaDockV142"]');
+  if(anchor){btn=document.createElement('button');btn.type='button';
+    btn.addEventListener('click',function(){window.setThemeV165(get()==='luxe'?'calm':'luxe');});
+    anchor.parentNode.insertBefore(btn,anchor);}
+  apply(get());
+  window.addEventListener('storage',function(e){if(e.key===KEY)apply(get());});
+  /* ช่องผลที่ยังว่าง ("-") ให้เป็นสีจาง จะได้ไม่แย่งสายตากับเลขที่ออกแล้ว */
+  function mark(){document.querySelectorAll('.result').forEach(function(el){var t=el.textContent.trim();el.classList.toggle('calm-empty',!t||/^[-–—\s]+$/.test(t));});}
+  var bd=document.getElementById('board');
+  if(bd&&window.MutationObserver){var pend=false;new MutationObserver(function(){if(pend)return;pend=true;requestAnimationFrame(function(){pend=false;mark();});}).observe(bd,{subtree:true,childList:true,characterData:true});}
+  mark();
 })();
 </script>
 </body>

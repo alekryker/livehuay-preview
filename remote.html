@@ -110,6 +110,10 @@ input{font:inherit;font-size:14px;width:100%;padding:10px;border-radius:10px;bor
   <button id="gNameBtn">✏️ เปลี่ยนชื่อ</button>
 </div>
 
+<div class="sec"><h2>🎨 ธีมหน้าไลฟ์</h2>
+  <div class="two"><button data-a="theme" data-v="calm">สบายตา (ใหม่)</button><button data-a="theme" data-v="luxe">ทองแดงเดิม</button></div>
+</div>
+
 <div class="sec"><h2>🔊 เสียงประกาศ</h2>
   <div class="two"><button data-a="voice" data-v="on">เปิดเสียง</button><button data-a="voice" data-v="off">ปิดเสียง</button></div>
   <div style="height:6px"></div>
@@ -174,7 +178,7 @@ input{font:inherit;font-size:14px;width:100%;padding:10px;border-radius:10px;bor
     if(el.dataset.confirm&&!confirm(el.dataset.confirm))return;
     var a=el.dataset.a,v=el.dataset.v,val=v;
     if(['results','vip','auto','boxes'].indexOf(a)>=0)val=v==='1';
-    if(['results','vip','auto','boxes','board'].indexOf(a)>=0||(a==='voice'&&v!=='test')){ui[a]=v;saveUi();mark();}
+    if(['results','vip','auto','boxes','board','theme'].indexOf(a)>=0||(a==='voice'&&v!=='test')){ui[a]=v;saveUi();mark();}
     var label=(el.closest('.row')?el.closest('.row').querySelector('span').textContent+' ':'')+el.textContent;
     send(a,val,label.trim());
   });
