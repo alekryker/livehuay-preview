@@ -110,6 +110,13 @@ input{font:inherit;font-size:14px;width:100%;padding:10px;border-radius:10px;bor
   <button id="gNameBtn">✏️ เปลี่ยนชื่อ</button>
 </div>
 
+<div class="sec"><h2>🔊 เสียงประกาศ</h2>
+  <div class="two"><button data-a="voice" data-v="on">เปิดเสียง</button><button data-a="voice" data-v="off">ปิดเสียง</button></div>
+  <div style="height:6px"></div>
+  <button data-a="voice" data-v="test" style="text-align:center">▶️ ทดสอบเสียงที่หน้าไลฟ์</button>
+  <div class="note">หน้าไลฟ์จะพูดตอนใกล้ออกผล และตอนผลออก (เลือกเสียง/ความเร็ว ที่เมนูหน้าหลัก → 🔊 เสียงประกาศ) • หน้าไลฟ์ต้องเคยถูกแตะ 1 ครั้งหลังเปิด เบราว์เซอร์ถึงยอมให้พูด</div>
+</div>
+
 <div class="sec"><h2>อื่น ๆ</h2>
   <div class="two">
     <button data-a="snapshots" data-v="1">🔄 รีเฟรชหน้าที่ถูกบล็อก</button>
@@ -167,7 +174,7 @@ input{font:inherit;font-size:14px;width:100%;padding:10px;border-radius:10px;bor
     if(el.dataset.confirm&&!confirm(el.dataset.confirm))return;
     var a=el.dataset.a,v=el.dataset.v,val=v;
     if(['results','vip','auto','boxes'].indexOf(a)>=0)val=v==='1';
-    if(['results','vip','auto','boxes','board'].indexOf(a)>=0){ui[a]=v;saveUi();mark();}
+    if(['results','vip','auto','boxes','board'].indexOf(a)>=0||(a==='voice'&&v!=='test')){ui[a]=v;saveUi();mark();}
     var label=(el.closest('.row')?el.closest('.row').querySelector('span').textContent+' ':'')+el.textContent;
     send(a,val,label.trim());
   });

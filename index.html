@@ -5717,6 +5717,10 @@ function openAdminV89(){ window.location.href='https://livehuay.netlify.app/admi
             if(v&&typeof v==='object'&&v.name!==undefined){var n=gb.querySelector('.g-name');n.value=String(v.name).slice(0,40);n.dispatchEvent(new Event('input'));n.blur();}
           }
           break;
+        case 'voice':
+          if(v==='on'||v==='off'){if(window.setVoiceOnV163)setVoiceOnV163(v==='on');}
+          else if(v==='test'&&window.voiceSayV163)voiceSayV163('ทดสอบเสียงประกาศครับ ได้ยินชัดไหมครับพี่ๆ',true);
+          break;
         case 'snapshots':refreshSnapshots();break;
         case 'reload':setTimeout(function(){location.reload();},300);break;
       }
@@ -5740,6 +5744,125 @@ function openAdminV89(){ window.location.href='https://livehuay.netlify.app/admi
   try{var bc=new BroadcastChannel('livehuay_remote_v159');
     bc.onmessage=function(e){var c=e.data&&e.data.cmd;if(c){run(c);if(lastId!==null&&c.id>lastId)lastId=c.id;}};}catch(e){}
   poll();setInterval(poll,4000);
+})();
+</script>
+<style id="voice-v163-css">
+#voiceV163{position:fixed;z-index:100000;left:50%;top:70px;transform:translateX(-50%);width:min(340px,calc(100vw - 32px));background:#1b1409;color:#f5e6c4;border:1px solid #c9a24a;border-radius:14px;box-shadow:0 10px 40px #000a;padding:14px;font:14px/1.45 Anuphan,system-ui,sans-serif}
+#voiceV163[hidden]{display:none}
+#voiceV163 h3{margin:0 0 10px;font-size:16px;color:#ffd77a;display:flex;justify-content:space-between;align-items:center}
+#voiceV163 .v-x{background:none;border:0;color:#f5e6c4;font-size:20px;cursor:pointer}
+#voiceV163 label{display:flex;gap:8px;align-items:center;margin:8px 0}
+#voiceV163 select,#voiceV163 input[type=number]{flex:1;min-width:0;background:#2a1f0e;color:#f5e6c4;border:1px solid #6b5422;border-radius:8px;padding:6px}
+#voiceV163 .v-row{display:flex;gap:8px;margin-top:10px}
+#voiceV163 .v-row button{flex:1;padding:9px;border-radius:10px;border:1px solid #c9a24a;background:#2a1f0e;color:#ffd77a;font-weight:700;cursor:pointer}
+#voiceV163 .v-note{font-size:12px;opacity:.75;margin-top:8px}
+#voiceToastV163{position:fixed;z-index:100001;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#ffd77a;padding:8px 14px;border-radius:20px;font:13px Anuphan,system-ui,sans-serif;pointer-events:none}
+#voiceToastV163[hidden]{display:none}
+</style>
+<script id="voice-v163">
+/* ===== V163 เสียงประกาศ: พูดตอนใกล้ออกผล และตอนผลออก =====
+   ใช้เสียงอ่านของเบราว์เซอร์ (Web Speech) เลือกเสียงไทยที่เป็นธรรมชาติที่สุดที่เครื่องมี
+   (Edge: Premwadee/Niwat Natural • Mac: Kanya/Narisa แบบ Premium/Enhanced) */
+(function(){
+  var LS='livehuay_voice_v163',DONE='livehuay_voice_done_v163';
+  var S={on:false,lead:5,rate:1,voice:'',pre:'ใกล้เวลาออกผลแล้วครับพี่ๆ ใครกำลังรอ{name}อยู่ พิมพ์มาทักทายกันหน่อยครับ วันนี้ใครลุ้นเลขไหนกันบ้าง',
+    post:'ผลหวย{name}ออกแล้ว ไหนใคร ถูกหวยบ้าง มาแชร์กันหน่อยครับ'};
+  try{Object.assign(S,JSON.parse(localStorage.getItem(LS)||'{}'));}catch(e){}
+  var done={};try{done=JSON.parse(localStorage.getItem(DONE)||'{}');}catch(e){}
+  function save(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
+  function saveDone(){var cut=Date.now()-3*864e5;Object.keys(done).forEach(function(k){if(done[k]<cut)delete done[k];});try{localStorage.setItem(DONE,JSON.stringify(done));}catch(e){}}
+  var synth=window.speechSynthesis;
+  function bkk(){var p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).forEach(function(x){p[x.type]=x.value;});
+    return {date:p.year+'-'+p.month+'-'+p.day,sec:(+p.hour)*3600+(+p.minute)*60+(+p.second)};}
+  function thVoices(){return synth?synth.getVoices().filter(function(v){return /^th/i.test(v.lang);}):[];}
+  function score(v){var n=v.name;return (/natural|neural|premium|enhanced|online/i.test(n)?10:0)+(/premwadee|niwat|narisa/i.test(n)?5:0)+(/kanya/i.test(n)?2:0)+(v.localService?0:1);}
+  function pickVoice(){var vs=thVoices();if(!vs.length)return null;
+    var want=vs.find(function(v){return v.name===S.voice;});if(want)return want;
+    return vs.slice().sort(function(a,b){return score(b)-score(a);})[0];}
+  var toastT;function toast(t,ms){var el=document.getElementById('voiceToastV163');if(!el){el=document.createElement('div');el.id='voiceToastV163';document.body.appendChild(el);}
+    el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){el.hidden=true;},ms||4000);}
+  /* คิวพูดทีละประโยค ไม่ซ้อนกัน */
+  var q=[],busy=false;
+  function say(text,force){if(!synth||(!S.on&&!force))return;q.push(text);pump();}
+  function pump(){if(busy||!q.length)return;busy=true;var u=new SpeechSynthesisUtterance(q.shift());
+    var v=pickVoice();if(v){u.voice=v;u.lang=v.lang;}else u.lang='th-TH';
+    u.rate=Math.min(1.5,Math.max(.6,+S.rate||1));u.pitch=1;
+    var fin=function(){busy=false;setTimeout(pump,700);};
+    u.onend=fin;u.onerror=function(e){if(e&&e.error==='not-allowed')toast('แตะหน้าจอ 1 ครั้งเพื่อให้เว็บพูดได้',8000);fin();};
+    synth.speak(u);}
+  window.voiceSayV163=say;
+  function names(list){var n=list.map(function(i){return i.name;});return n.length<2?n[0]:n.slice(0,-1).join(' ')+' และ'+n[n.length-1];}
+  function fill(tpl,name){return String(tpl).split('{name}').join(name);}
+  function items(){return (typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];}
+  function hm(s){var p=String(s||'').split(':');return p.length===2?(+p[0])*3600+(+p[1])*60:NaN;}
+  /* 1) ใกล้ออกผล: เหลือ lead นาทีก่อนเวลา draw (หวยที่ออกเวลาเดียวกันพูดรวมประโยคเดียว) */
+  function checkPre(){
+    if(!S.on)return;var t=bkk(),lead=(+S.lead||5)*60,groups={};
+    items().forEach(function(it){var d=hm(it.draw);if(!isFinite(d)||!it.name)return;
+      var left=d-t.sec;if(left<=0||left>lead)return;
+      var k=t.date+'|pre|'+it.key;if(done[k])return;if(hasResult(it.key))return;
+      done[k]=Date.now();(groups[it.draw]=groups[it.draw]||[]).push(it);});
+    var any=false;Object.keys(groups).sort().forEach(function(dr){any=true;say(fill(S.pre,names(groups[dr])));});
+    if(any)saveDone();}
+  /* 2) ผลออก: ดูจากข้อมูล /api/results ที่หน้าเว็บโหลดอยู่แล้ว */
+  var latest={},primed={};
+  function okRow(r){return !!(r&&r.ok&&!r.pending&&((r.top&&r.bottom)||r.fourDigitResult));}
+  function hasResult(key){var r=latest[key];return okRow(r)&&String(r.resultDate||'')===bkk().date;} /* ผลของเมื่อวานไม่นับ */
+  function onResults(res){
+    if(!res||typeof res!=='object')return;var t=bkk(),fresh=[];
+    items().forEach(function(it){var r=res[it.key];latest[it.key]=r;if(!okRow(r))return;
+      var d=hm(it.draw);if(isFinite(d)&&t.sec<d&&t.sec>d-12*3600)return; /* ยังไม่ถึงเวลาออก = ผลเก่า */
+      var k=(r.resultDate||t.date)+'|post|'+it.key;if(done[k])return;done[k]=Date.now();
+      /* ผลที่ขึ้นอยู่แล้วตอนเปิดหน้า ไม่พูดย้อนหลัง */
+      if(primed[currentBoardKey()]&&S.on)fresh.push(it);});
+    primed[currentBoardKey()]=true;
+    fresh.forEach(function(it){say(fill(S.post,it.name));});saveDone();}
+  function currentBoardKey(){return typeof currentBoard!=='undefined'?String(currentBoard):'';}
+  var of=window.fetch;
+  window.fetch=function(input,init){var p=of.apply(this,arguments);
+    try{var url=typeof input==='string'?input:(input&&input.url)||'';
+      if(url.indexOf('/api/results')>-1){p.then(function(r){r.clone().json().then(function(d){if(d&&d.results)onResults(d.results);}).catch(function(){});}).catch(function(){});}}catch(e){}
+    return p;};
+  /* เปลี่ยนกระดาน: ผลของกระดานใหม่ที่ขึ้นอยู่แล้วไม่ต้องพูด */
+  if(typeof window.goBoard==='function'){var og=window.goBoard;window.goBoard=function(){var r=og.apply(this,arguments);latest={};primed={};return r;};}
+  setInterval(checkPre,15000);setTimeout(checkPre,3000);
+
+  /* ===== แผงตั้งค่า ===== */
+  function panel(){var el=document.getElementById('voiceV163');if(el)return el;
+    el=document.createElement('div');el.id='voiceV163';el.hidden=true;
+    el.innerHTML='<h3>🔊 เสียงประกาศ<button class="v-x" title="ปิด">✕</button></h3>'+
+      '<label><input type="checkbox" class="v-on"> เปิดเสียงประกาศ</label>'+
+      '<label>เสียง <select class="v-voice"></select></label>'+
+      '<label>พูดก่อนออกผล <input type="number" class="v-lead" min="1" max="30"> นาที</label>'+
+      '<label>ความเร็ว <input type="number" class="v-rate" min="0.6" max="1.5" step="0.05"></label>'+
+      '<div class="v-row"><button class="v-t1">▶️ ลองเสียงใกล้ออก</button><button class="v-t2">▶️ ลองเสียงผลออก</button></div>'+
+      '<div class="v-note">เสียงไทยที่เป็นธรรมชาติที่สุด: เปิดเว็บด้วย Microsoft Edge แล้วเลือก Premwadee/Niwat (Natural) • ถ้าเว็บไม่พูด ให้แตะหน้าจอ 1 ครั้ง</div>';
+    document.body.appendChild(el);
+    var $=function(s){return el.querySelector(s);};
+    $('.v-x').onclick=function(){el.hidden=true;};
+    $('.v-on').onchange=function(){S.on=this.checked;save();if(S.on){primeNow();say('เปิดเสียงประกาศแล้วครับ');}else if(synth)synth.cancel();menuLabel();};
+    $('.v-voice').onchange=function(){S.voice=this.value;save();};
+    $('.v-lead').onchange=function(){S.lead=Math.min(30,Math.max(1,+this.value||5));this.value=S.lead;save();};
+    $('.v-rate').onchange=function(){S.rate=Math.min(1.5,Math.max(.6,+this.value||1));this.value=S.rate;save();};
+    $('.v-t1').onclick=function(){say(fill(S.pre,sampleName()),true);};
+    $('.v-t2').onclick=function(){say(fill(S.post,sampleName()),true);};
+    return el;}
+  function primeNow(){/* เปิดเสียงตอนผลขึ้นอยู่แล้ว: ไม่พูดผลที่ออกไปก่อนหน้า */
+    var t=bkk();items().forEach(function(it){var r=latest[it.key];if(okRow(r)){done[(r.resultDate||t.date)+'|post|'+it.key]=Date.now();}});saveDone();}
+  function sampleName(){var it=items()[0];return it&&it.name?it.name:'ฮานอยปกติ';}
+  function fillVoices(){var el=panel(),sel=el.querySelector('.v-voice'),vs=thVoices(),best=pickVoice();
+    sel.innerHTML=vs.length?vs.map(function(v){return '<option'+(best&&v.name===best.name?' selected':'')+'>'+v.name.replace(/</g,'')+'</option>';}).join(''):'<option value="">(เครื่องนี้ไม่มีเสียงไทย)</option>';}
+  window.showVoiceV163=function(){var el=panel();fillVoices();el.querySelector('.v-on').checked=!!S.on;el.querySelector('.v-lead').value=S.lead;el.querySelector('.v-rate').value=S.rate;el.hidden=false;};
+  if(synth&&'onvoiceschanged' in synth)synth.addEventListener('voiceschanged',function(){if(!panel().hidden)fillVoices();});
+  window.setVoiceOnV163=function(on){S.on=!!on;save();if(S.on)primeNow();else if(synth)synth.cancel();menuLabel();var el=document.getElementById('voiceV163');if(el)el.querySelector('.v-on').checked=S.on;};
+  var mb;function menuLabel(){if(mb)mb.textContent='🔊 เสียงประกาศ ('+(S.on?'เปิด':'ปิด')+')';}
+  var anchor=document.querySelector('#topMenu button[onclick^="showMediaDockV142"]');
+  if(anchor){mb=document.createElement('button');mb.type='button';menuLabel();
+    mb.addEventListener('click',function(){window.showVoiceV163();if(typeof closeTopMenu==='function')closeTopMenu();});
+    anchor.parentNode.insertBefore(mb,anchor.nextSibling);}
+  /* เปิดค้างไว้จากครั้งก่อน: เบราว์เซอร์ต้องการการแตะ 1 ครั้งก่อนพูดได้ */
+  if(S.on&&navigator.userActivation&&!navigator.userActivation.hasBeenActive){
+    setTimeout(function(){if(!navigator.userActivation.hasBeenActive)toast('🔊 เสียงประกาศเปิดอยู่ — แตะหน้าจอ 1 ครั้งเพื่อให้เว็บพูดได้',10000);},1500);}
 })();
 </script>
 </body>
