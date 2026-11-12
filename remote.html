@@ -8,7 +8,7 @@
 (function(){
   'use strict';
   var API='https://livehuay.netlify.app';
-  var GUARD={hanoi_normal:'18:30',hanoi_vip:'19:30'},DELAY=7*60e3,STABLE=3*60e3,seen={},LOADED=Date.now();
+  var GUARD={hanoi_normal:'18:30',hanoi_vip:'19:30',hanoi_development:'19:30'},DELAY=7*60e3,STABLE=3*60e3,seen={},LOADED=Date.now();
   function bkk(){var p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){p[x.type]=x.value;});return p.year+'-'+p.month+'-'+p.day;}
   function drawMs(date,hm){return Date.parse(date+'T'+hm+':00+07:00');}
   function isSpin(v){var s=String(v==null?'':v).replace(/\D/g,'');if(s.length<5)return false;for(var i=1;i<s.length;i++)if(+s[i]!==(+s[i-1]+1)%10)return false;return true;}
