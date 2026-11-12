@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="th">
+<head>
+<script id="gh-pages-shim">
+/* GitHub Pages: ส่ง /api/* ไปที่ livehuay.netlify.app และกรองผลก่อนแสดง
+   - ฮานอยปกติ/VIP: ไม่แสดงก่อนเวลาออก+7 นาที และเลขต้องนิ่ง 3 นาที (เหมือน V155)
+   - เลขเรียงหลอกตอนหมุน (12345/45678/78901...) ทุกหวย → รอผล (เหมือน V161) */
+(function(){
+  'use strict';
+  var API='https://livehuay.netlify.app';
+  var GUARD={hanoi_normal:'18:30',hanoi_vip:'19:30'},DELAY=7*60e3,STABLE=3*60e3,seen={},LOADED=Date.now();
+  function bkk(){var p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){p[x.type]=x.value;});return p.year+'-'+p.month+'-'+p.day;}
+  function drawMs(date,hm){return Date.parse(date+'T'+hm+':00+07:00');}
+  function isSpin(v){var s=String(v==null?'':v).replace(/\D/g,'');if(s.length<5)return false;for(var i=1;i<s.length;i++)if(+s[i]!==(+s[i-1]+1)%10)return false;return true;}
+  function guard(d){
+    var res=d&&d.results;if(!res||typeof res!=='object')return;
+    var now=Date.now(),date=bkk();
+    Object.keys(res).forEach(function(k){var r=res[k];if(!r||r.manual)return;
+      var f=['rawSpecial','rawResult','rawFirst','rawSecond'].filter(function(x){return isSpin(r[x]);})[0];
+      if(f)res[k]=Object.assign({},r,{pending:true,top:'',bottom:''});});
+    Object.keys(GUARD).forEach(function(k){
+      var row=res[k];if(!row||row.manual)return;
+      var v=(row.ok&&!row.pending&&row.top&&row.bottom&&(row.resultDate||date)===date)?row.top+'-'+row.bottom:'';
+      var s=seen[k],draw=drawMs(date,GUARD[k]);
+      if(!s||s.date!==date||s.v!==v){
+        var late=!s&&LOADED>draw+30*60e3;   /* เปิดหน้าหลังออกผลนานแล้ว = ถือว่านิ่ง */
+        s=seen[k]={date:date,v:v,since:late?now-STABLE:now};
+      }
+      if(!v||now<draw)return;
+      if(s.released===v)return;
+      if(now>=draw+DELAY&&now-s.since>=STABLE){s.released=v;return;}
+      res[k]=Object.assign({},row,{pending:true,top:'',bottom:''});
+    });
+  }
+  var of=window.fetch.bind(window);
+  window.fetch=function(input,init){
+    var url=typeof input==='string'?input:(input&&input.url)||'';
+    if(typeof input==='string'&&input.indexOf('/api/')===0){
+      var p=of(API+input,init);
+      if(input.indexOf('/api/results')===0){
+        return p.then(function(r){return r.clone().json().then(function(d){guard(d);
+          return new Response(JSON.stringify(d),{status:r.status,headers:{'content-type':'application/json'}});}).catch(function(){return r;});});
+      }
+      return p;
+    }
+    return of(input,init);
+  };
+})();
+
+</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>รีโมท LIVEHUAY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#160404;--panel:#241010;--line:rgba(242,193,78,.35);--gold:#ffd76a;--txt:#fff4d6;--mut:#d9b98a;--on:#2fa84f}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% -10%,#5a1010,var(--bg) 60%);background-color:var(--bg);color:var(--txt);
+  font-family:Anuphan,Kanit,sans-serif;min-height:100vh;padding:14px 16px 90px}
+h1{font-size:20px;margin:4px 0 2px;color:var(--gold);display:flex;align-items:center;gap:8px}
+.sub{font-size:12px;color:var(--mut);margin-bottom:12px}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px;max-width:560px;margin-left:auto;margin-right:auto}
+.sec h2{font-size:13px;color:var(--gold);margin:0 0 8px;letter-spacing:.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+button,.lnk{font:inherit;font-weight:700;font-size:15px;color:var(--txt);background:#1a0808;border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;padding:12px 10px;cursor:pointer;text-align:left;text-decoration:none;display:block;width:100%}
+button:active{transform:translateY(1px)}
+button.sel{background:linear-gradient(110deg,#c99318,#ffe48a 50%,#c99318);color:#3a1700;border-color:transparent}
+.row{display:grid;grid-template-columns:1fr 84px 84px;gap:6px;align-items:center;margin-bottom:6px}
+.row span{font-weight:700}
+.row button{text-align:center;padding:10px 4px}
+.row button.on.sel{background:var(--on);color:#fff}
+.row button.off.sel{background:#8a1c1c;color:#fff}
+input{font:inherit;font-size:14px;width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#120303;color:var(--txt);margin-bottom:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#2fa84f;color:#fff;padding:10px 16px;border-radius:12px;
+  font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.4);opacity:0;transition:.2s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1}.toast.err{background:#b30000}
+.note{font-size:11px;color:var(--mut);margin-top:6px;line-height:1.5}
+</style>
+</head>
+<body>
+<h1>📱 รีโมทคุมหน้าไลฟ์</h1>
+<div class="sub">กดที่นี่ → หน้าหลักที่เปิดอยู่ทุกจอเปลี่ยนตาม (เครื่องเดียวกันทันที • คนละเครื่องภายใน ~4 วิ)</div>
+
+<div class="sec"><h2>เลือกช่วง</h2><div class="grid" id="boards"></div></div>
+
+<div class="sec"><h2>แสดงผล</h2>
+  <div class="row"><span>🔒 แสดงผลหวย</span><button class="on" data-a="results" data-v="1">เปิด</button><button class="off" data-a="results" data-v="0">ปิด</button></div>
+  <div class="row"><span>✅ VIP ผล</span><button class="on" data-a="vip" data-v="1">เปิด</button><button class="off" data-a="vip" data-v="0">ปิด</button></div>
+  <div class="row"><span>✅ AUTO ผล</span><button class="on" data-a="auto" data-v="1">เปิด</button><button class="off" data-a="auto" data-v="0">ปิด</button></div>
+  <div class="row"><span>🟥🟩 แดง/เขียว</span><button class="on" data-a="boxes" data-v="1">เปิด</button><button class="off" data-a="boxes" data-v="0">ปิด</button></div>
+</div>
+
+<div class="sec"><h2>🎵 YouTube / เพลงลอย</h2>
+  <input id="ytUrl" placeholder="วางลิงก์ YouTube (เว้นว่าง = เพลงเริ่มต้น/เพลงล่าสุด)">
+  <div class="two"><button id="ytOpen">▶️ เล่น (เสียงอย่างเดียว)</button><button id="ytClose">⏹ ปิดเพลง</button></div>
+  <div style="height:6px"></div>
+  <div class="two"><button id="ytShow">👁 โชว์กรอบเพลง</button><button id="ytHide">🙈 ซ่อนกรอบเพลง</button></div>
+  <div class="note">กดเล่นจากที่นี่ หน้าไลฟ์จะมีแต่เสียง ไม่เห็นกรอบเพลง</div>
+</div>
+
+<div class="sec"><h2>🔮 แนวทางหวย</h2>
+  <div class="two" style="margin-bottom:6px"><button data-a="guide" data-v="open">เปิดกรอบ</button><button data-a="guide" data-v="close">ปิดกรอบ</button></div>
+  <button data-a="guide" data-v="roll" style="text-align:center;font-size:18px">🎲 สุ่ม</button>
+  <div style="height:8px"></div>
+  <input id="gName" maxlength="40" placeholder="เปลี่ยนชื่อหวยในกรอบ (หวยที่เลือกอยู่)">
+  <button id="gNameBtn">✏️ เปลี่ยนชื่อ</button>
+</div>
+
+<div class="sec"><h2>อื่น ๆ</h2>
+  <div class="two">
+    <button data-a="snapshots" data-v="1">🔄 รีเฟรชหน้าที่ถูกบล็อก</button>
+    <button data-a="reload" data-v="1" data-confirm="รีโหลดหน้าไลฟ์ทั้งหน้า?">♻️ รีโหลดหน้าไลฟ์</button>
+  </div>
+  <div style="height:6px"></div>
+  <div class="two">
+    <a class="lnk" id="editLnk" href="./" target="_blank">⚙️ ปรับ iframe + กรอบ</a>
+    <a class="lnk" href="https://livehuay.netlify.app/admin/" target="_blank">🛠️ แก้ / เพิ่มผลหวย</a>
+  </div>
+  <div class="note">ปรับ iframe: เปิดหน้าหลักอีกแท็บ/อีกเครื่อง กด ⚙️ ปรับ แล้ว “บันทึก” — หน้าไลฟ์จะขยับตามเอง ไม่ต้องแตะหน้าไลฟ์</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var KEY='remote_cmds_v159',MAX=15,list=null,queue=Promise.resolve();
+  var bc=null;try{bc=new BroadcastChannel('livehuay_remote_v159');}catch(e){}
+  var BOARDS=[['morning','🌅 เช้า'],['afternoon','☀️ บ่าย'],['evening','🌇 เย็น'],['hanoi','🇻🇳 ฮานอย'],['lao-development','🇱🇦 ลาวพัฒนา LIVE'],['night','🌙 ดึก'],['test','🧪 ทดสอบ']];
+  var LS='livehuay_remote_ui_v159';
+  var ui={};try{ui=JSON.parse(localStorage.getItem(LS))||{};}catch(e){}
+  function saveUi(){try{localStorage.setItem(LS,JSON.stringify(ui));}catch(e){}}
+
+  var bw=document.getElementById('boards');
+  BOARDS.forEach(function(b){var x=document.createElement('button');x.textContent=b[1];x.dataset.a='board';x.dataset.v=b[0];bw.appendChild(x);});
+
+  function mark(){
+    document.querySelectorAll('[data-a]').forEach(function(el){
+      var a=el.dataset.a;if(!(a in ui))return;
+      el.classList.toggle('sel',String(ui[a])===el.dataset.v);
+    });
+    if(ui.board)document.getElementById('editLnk').href='./#'+ui.board;
+  }
+  var tt=0;function toast(msg,err){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');clearTimeout(tt);tt=setTimeout(function(){t.className='toast';},1600);}
+
+  function getList(){
+    return fetch('/api/settings',{cache:'no-store'}).then(function(r){return r.json();})
+      .then(function(res){var p=((res&&res.settings)||{})[KEY]||{};return Array.isArray(p.list)?p.list:[];});
+  }
+  function send(a,v,label){
+    var id=String(Date.now()).padStart(15,'0')+'-'+Math.random().toString(36).slice(2,7);
+    var cmd={id:id,a:a,v:v,at:new Date().toISOString()};
+    if(bc)bc.postMessage({cmd:cmd});
+    queue=queue.then(function(){return getList();}).then(function(cur){
+      cur=cur.concat([cmd]).slice(-MAX);
+      return fetch('/api/settings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key:KEY,payload:{list:cur}})});
+    }).then(function(r){if(!r.ok)throw new Error(r.status);toast('ส่งแล้ว: '+label);})
+      .catch(function(){toast('ส่งไม่สำเร็จ ลองใหม่',true);});
+  }
+
+  document.body.addEventListener('click',function(e){
+    var el=e.target.closest('button[data-a]');if(!el)return;
+    if(el.dataset.confirm&&!confirm(el.dataset.confirm))return;
+    var a=el.dataset.a,v=el.dataset.v,val=v;
+    if(['results','vip','auto','boxes'].indexOf(a)>=0)val=v==='1';
+    if(['results','vip','auto','boxes','board'].indexOf(a)>=0){ui[a]=v;saveUi();mark();}
+    var label=(el.closest('.row')?el.closest('.row').querySelector('span').textContent+' ':'')+el.textContent;
+    send(a,val,label.trim());
+  });
+  document.getElementById('ytOpen').addEventListener('click',function(){
+    var u=document.getElementById('ytUrl').value.trim();
+    if(u&&!/^https?:\/\//i.test(u)){toast('ลิงก์ต้องขึ้นต้น http',true);return;}
+    send('dock',u?{url:u}:{open:true},'เปิดเพลง');
+  });
+  document.getElementById('ytClose').addEventListener('click',function(){send('dock',{open:false},'ปิดเพลง');});
+  document.getElementById('ytShow').addEventListener('click',function(){send('dock',{show:true},'โชว์กรอบเพลง');});
+  document.getElementById('ytHide').addEventListener('click',function(){send('dock',{show:false},'ซ่อนกรอบเพลง');});
+  document.getElementById('gNameBtn').addEventListener('click',function(){
+    var n=document.getElementById('gName').value.trim();if(!n){toast('พิมพ์ชื่อก่อน',true);return;}
+    send('guide',{name:n},'เปลี่ยนชื่อเป็น '+n);
+  });
+  mark();
+})();
+</script>
+</body>
+</html>

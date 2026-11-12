@@ -1,0 +1,5746 @@
+<!-- VERSION: LUXE_GOLD_UI_V154 + 2026-09-18 HANOI_NORMAL_CORRECTNESS_V150 + YOUTUBE_FLOATING_PLAYER_V142 -->
+<!doctype html>
+<html lang="th">
+<head>
+<script id="gh-pages-shim">
+/* GitHub Pages: ส่ง /api/* ไปที่ livehuay.netlify.app และกรองผลก่อนแสดง
+   - ฮานอยปกติ/VIP: ไม่แสดงก่อนเวลาออก+7 นาที และเลขต้องนิ่ง 3 นาที (เหมือน V155)
+   - เลขเรียงหลอกตอนหมุน (12345/45678/78901...) ทุกหวย → รอผล (เหมือน V161) */
+(function(){
+  'use strict';
+  var API='https://livehuay.netlify.app';
+  var GUARD={hanoi_normal:'18:30',hanoi_vip:'19:30'},DELAY=7*60e3,STABLE=3*60e3,seen={},LOADED=Date.now();
+  function bkk(){var p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){p[x.type]=x.value;});return p.year+'-'+p.month+'-'+p.day;}
+  function drawMs(date,hm){return Date.parse(date+'T'+hm+':00+07:00');}
+  function isSpin(v){var s=String(v==null?'':v).replace(/\D/g,'');if(s.length<5)return false;for(var i=1;i<s.length;i++)if(+s[i]!==(+s[i-1]+1)%10)return false;return true;}
+  function guard(d){
+    var res=d&&d.results;if(!res||typeof res!=='object')return;
+    var now=Date.now(),date=bkk();
+    Object.keys(res).forEach(function(k){var r=res[k];if(!r||r.manual)return;
+      var f=['rawSpecial','rawResult','rawFirst','rawSecond'].filter(function(x){return isSpin(r[x]);})[0];
+      if(f)res[k]=Object.assign({},r,{pending:true,top:'',bottom:''});});
+    Object.keys(GUARD).forEach(function(k){
+      var row=res[k];if(!row||row.manual)return;
+      var v=(row.ok&&!row.pending&&row.top&&row.bottom&&(row.resultDate||date)===date)?row.top+'-'+row.bottom:'';
+      var s=seen[k],draw=drawMs(date,GUARD[k]);
+      if(!s||s.date!==date||s.v!==v){
+        var late=!s&&LOADED>draw+30*60e3;   /* เปิดหน้าหลังออกผลนานแล้ว = ถือว่านิ่ง */
+        s=seen[k]={date:date,v:v,since:late?now-STABLE:now};
+      }
+      if(!v||now<draw)return;
+      if(s.released===v)return;
+      if(now>=draw+DELAY&&now-s.since>=STABLE){s.released=v;return;}
+      res[k]=Object.assign({},row,{pending:true,top:'',bottom:''});
+    });
+  }
+  var of=window.fetch.bind(window);
+  window.fetch=function(input,init){
+    var url=typeof input==='string'?input:(input&&input.url)||'';
+    if(typeof input==='string'&&input.indexOf('/api/')===0){
+      var p=of(API+input,init);
+      if(input.indexOf('/api/results')===0){
+        return p.then(function(r){return r.clone().json().then(function(d){guard(d);
+          return new Response(JSON.stringify(d),{status:r.status,headers:{'content-type':'application/json'}});}).catch(function(){return r;});});
+      }
+      return p;
+    }
+    return of(input,init);
+  };
+})();
+
+</script>
+
+  <!-- V150: HANOI NORMAL LIVE CURRENT-DATE VERIFICATION -->
+  <!-- V149: SINGAPORE STI SOURCE FIX -->
+  <!-- V147: NIGHT LAO DEVELOPMENT CARD -->
+  <!-- V144: YOUTUBE LOOP ENABLED -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>ไลฟ์สด กระดานเช้า</title>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Anuphan,sans-serif;background:#250000;color:#fff}
+body{background:radial-gradient(circle at 20% 0%,rgba(255,40,40,.22),transparent 35%),linear-gradient(#4a0000,#230000)}
+.page{max-width:1600px;margin:auto;padding:10px 14px 16px}
+.header{border:2px solid #ff3838;border-radius:18px;padding:12px 18px;background:linear-gradient(#650000,#a00000 58%,#650000);box-shadow:0 0 14px #f00}
+.hero{min-height:92px;display:flex;align-items:center;justify-content:center;gap:16px}
+.hero-copy{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center}
+.live{padding:9px 16px;border:2px solid #ff9494;border-radius:18px;background:linear-gradient(#ff3e3e,#a50000);font-size:28px;font-weight:900;font-style:italic}
+.title{margin:0;font-size:68px;line-height:1;font-weight:900;text-shadow:0 3px #620000,0 0 14px #f00}
+.title b{color:#ffc82d}
+.board-date{font-size:22px;line-height:1.2;font-weight:800;color:#fff3ad;text-shadow:0 2px 4px rgba(0,0,0,.42)}
+.ticker{height:45px;border:2px solid #ff7777;border-radius:999px;display:flex;align-items:center;overflow:hidden;background:#970000}
+.ticker-label{height:100%;display:flex;align-items:center;padding:0 18px;background:#d90000;font-weight:900;font-style:italic}
+.ticker-track{flex:1;overflow:hidden;white-space:nowrap}
+.ticker-text{display:inline-block;padding-left:100%;animation:marquee 26s linear infinite;font-weight:800}
+.ticker-text b{color:#ffe329}
+@keyframes marquee{to{transform:translateX(-100%)}}
+
+.top-menu-wrap{
+  position:fixed;
+  top:12px;
+  left:14px;
+  z-index:99990;
+}
+.menu-toggle{
+  width:44px;
+  height:44px;
+  border:2px solid rgba(255,255,255,.7);
+  border-radius:12px;
+  background:rgba(100,0,0,.92);
+  color:#fff;
+  font-size:24px;
+  line-height:1;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  box-shadow:0 6px 20px rgba(0,0,0,.28);
+}
+.menu-toggle.active{
+  background:#ffe229;
+  color:#760000;
+}
+.toolbar{
+  position:absolute;
+  left:0;
+  top:52px;
+  width:240px;
+  display:none;
+  flex-direction:column;
+  gap:7px;
+  padding:9px;
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:14px;
+  background:rgba(65,0,0,.97);
+  box-shadow:0 10px 28px rgba(0,0,0,.35);
+}
+.toolbar.show{display:flex}
+.toolbar button{
+  width:100%;
+  border:0;
+  border-radius:10px;
+  background:#fff;
+  color:#b80000;
+  padding:9px 11px;
+  font-family:inherit;
+  font-weight:800;
+  cursor:pointer;
+  text-align:left;
+}
+.toolbar button.active{
+  background:#ffe229;
+  color:#760000;
+}
+
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:8px}
+.card{position:relative;background:linear-gradient(#c00000,#7b0000);border:2px solid #ff6262;border-radius:14px;padding:9px;box-shadow:0 0 12px rgba(255,0,0,.9),inset 0 0 16px rgba(255,80,80,.2);overflow:hidden}
+.head{display:grid;grid-template-columns:56px 1fr;gap:9px;align-items:center;margin-bottom:8px}
+.flag{
+  width:56px;
+  height:56px;
+  min-width:56px;
+  min-height:56px;
+  background:#fff;
+  border-radius:50% !important;
+  display:grid;
+  place-items:center;
+  overflow:hidden !important;
+  border:2px solid rgba(255,255,255,.85);
+  box-shadow:0 4px 10px rgba(0,0,0,.18);
+  aspect-ratio:1 / 1;
+}
+.flag img{
+  width:100% !important;
+  height:100% !important;
+  min-width:100%;
+  min-height:100%;
+  object-fit:cover !important;
+  object-position:center center;
+  display:block;
+  border-radius:50% !important;
+  clip-path:circle(50% at 50% 50%);
+}
+.flag-fallback{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-size:34px;
+  line-height:1;
+  background:#fff;
+  overflow:hidden;
+}
+.name{font-size:23px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.time{font-size:12px;color:#ffdede;font-weight:700;margin-top:2px}
+.viewer{height:128px;border-radius:10px;overflow:hidden;background:#fff;border:2px solid #ffb0b0;position:relative}
+.viewer iframe,
+.viewer .frame-shot{
+  position:absolute;
+  border:0;
+  background:#fff;
+  transform-origin:0 0;
+  pointer-events:none;
+}
+.viewer .frame-shot{
+  display:block;
+  max-width:none;
+  height:auto;
+}
+.viewer .frame-custom{
+  display:block;
+  box-sizing:border-box;
+}
+.stock-card{
+  width:100%;
+  height:100%;
+  border-radius:8px;
+  overflow:hidden;
+  box-sizing:border-box;
+  font-family:Arial,Helvetica,sans-serif;
+}
+.stock-card.nikkei{
+  background:linear-gradient(180deg,#0f5d9b 0%,#0c4f86 100%);
+  color:#fff;
+  border:2px solid #d9eefc;
+}
+.stock-card .bar{
+  padding:6px 10px 4px;
+  font-size:12px;
+  font-weight:700;
+  opacity:.95;
+}
+.stock-card .main{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  height:calc(100% - 28px);
+  padding:8px 14px 12px;
+}
+.stock-card .value{
+  font-size:28px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:.3px;
+  margin-bottom:6px;
+}
+.stock-card .meta{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+}
+.stock-card .change-red{color:#ffb7b7}
+.stock-card .change-green{color:#0ea85f}
+.stock-card.china{
+  background:linear-gradient(180deg,#ffffff 0%,#f5f5f5 100%);
+  color:#222;
+  border:2px solid #d8d8d8;
+}
+.stock-card.china .bar{
+  color:#666;
+  border-bottom:1px solid #e7e7e7;
+  font-size:11px;
+}
+.stock-card.china .main{
+  align-items:center;
+  justify-content:center;
+  padding:8px 10px 5px;
+}
+.stock-card.china .value{
+  color:#a93a3a;
+  font-weight:500;
+  font-size:31px;
+}
+.stock-card.china .prev{
+  width:100%;
+  margin-top:10px;
+  padding-top:7px;
+  border-top:1px solid #ddd;
+  color:#777;
+  font-size:11px;
+  text-align:left;
+}
+
+.stock-card.hsi{
+  background:#fff;
+  color:#222;
+  border:2px solid #d8d8d8;
+}
+.stock-card.hsi .bar{
+  color:#555;
+  border-bottom:1px solid #e5e5e5;
+}
+.stock-card.hsi .main{
+  padding-top:10px;
+}
+.stock-card.hsi .value{
+  color:#111;
+}
+.stock-card .time-note{
+  margin-top:6px;
+  font-size:11px;
+  color:#888;
+}
+.stock-card .prev-row{
+  width:100%;
+  margin-top:8px;
+  padding-top:6px;
+  border-top:1px solid rgba(255,255,255,.22);
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  font-size:11px;
+  opacity:.9;
+}
+.stock-card.hsi .prev-row,
+.stock-card.china .prev-row{
+  border-top-color:#dedede;
+  color:#777;
+}
+.market-live-note{
+  position:absolute;
+  right:6px;
+  bottom:4px;
+  z-index:5;
+  font-size:8px;
+  line-height:1;
+  padding:3px 5px;
+  border-radius:999px;
+  background:rgba(0,0,0,.52);
+  color:#fff;
+  pointer-events:none;
+}
+.market-live-note.stale{
+  background:#9a6700;
+}
+
+
+.overlay-layer{position:absolute;inset:0;pointer-events:none}
+.focus-box{position:absolute;border:3px solid;background:transparent;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+.focus-red{border-color:#e4332c}
+.focus-blue{border-color:#22c55e}
+.results{display:grid;grid-template-columns:1fr .72fr;gap:8px;margin-top:8px}
+.result{
+  height:56px;
+  background:#fff;
+  border-radius:9px;
+  display:grid;
+  place-items:center;
+  color:#e00000;
+  font:800 42px/1 Anuphan,sans-serif;
+  letter-spacing:1px;
+  text-shadow:0 1px 0 rgba(120,0,0,.08);
+  border:2px solid rgba(255,0,0,.16);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 2px 6px rgba(110,0,0,.12);
+}
+.result.waiting{
+  color:#d6a0a0;
+  font-size:24px;
+  font-weight:900;
+  text-shadow:none;
+}
+
+.source{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  margin:5px 0 0 auto;
+  border-radius:7px;
+  background:rgba(255,255,255,.12);
+  color:#ffdada;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:900;
+  line-height:1;
+}
+
+.adjust{display:none;margin-top:7px;background:rgba(0,0,0,.28);border-radius:9px;padding:7px}
+.adjust.show{display:block}
+.adjust-group{background:rgba(255,255,255,.06);border-radius:7px;padding:6px;margin-top:6px}
+.adjust-group:first-child{margin-top:0}
+.adjust-title{font-size:11px;font-weight:800;color:#ffe6e6;margin-bottom:5px}
+.adjust-row{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.adjust button{border:0;border-radius:6px;padding:5px 3px;background:#fff;color:#9e0000;font-weight:900;cursor:pointer;font-size:10px}
+.adjust small{display:block;margin-top:5px;text-align:left;color:#ffdede;font-size:9px;line-height:1.35;word-break:break-word}
+
+.bottom{margin-top:12px;border:2px solid #ff5b5b;border-radius:14px;background:linear-gradient(#bd0000,#6b0000);box-shadow:0 0 12px #f00;display:grid;grid-template-columns:250px 1fr;gap:12px;align-items:center;padding:8px 14px}
+.clock{background:#fff;color:#252525;border-radius:8px;padding:7px 12px;text-align:center;font:800 43px/1 Anuphan,sans-serif;letter-spacing:2px}
+.msg{
+  position:relative;
+  overflow:hidden;
+  white-space:nowrap;
+  height:42px;
+  display:flex;
+  align-items:center;
+  font-size:26px;
+  font-weight:700;
+}
+.msg-track{
+  display:inline-block;
+  min-width:max-content;
+  padding-left:100%;
+  animation:footerMarqueeSafe 16s linear infinite;
+  will-change:transform;
+}
+@keyframes footerMarqueeSafe{
+  from{transform:translateX(0)}
+  to{transform:translateX(-100%)}
+}
+
+@media(max-width:1100px){.board{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){
+.page{padding:7px}.header{padding:8px}.hero{min-height:64px;gap:8px}.hero-copy{gap:4px}.live{font-size:14px;padding:7px 10px}.title{font-size:29px}.board-date{font-size:14px}
+.ticker{height:34px}.ticker-label,.ticker-text{font-size:11px}
+.board{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.card{padding:7px}.head{grid-template-columns:42px 1fr;gap:6px}.flag{width:42px;height:42px;font-size:26px}.name{font-size:15px}.time{font-size:9px}
+.viewer{height:100px}.result{height:42px;font-size:25px}
+.bottom{grid-template-columns:1fr;gap:5px;padding:7px}.clock{font-size:29px}.msg{font-size:11px;text-align:center}
+}
+
+
+
+
+
+/* stocks-vip.com: iframe สดแบบหน้ายาว */
+.frame-live-long{
+  height:8000px !important;
+  min-height:8000px !important;
+}
+
+
+.toolbar .menu-section{
+  color:#ffd9d9;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.5px;
+  padding:3px 4px 0;
+  text-transform:uppercase;
+}
+.toolbar .menu-divider{
+  height:1px;
+  background:rgba(255,255,255,.18);
+  margin:2px 0;
+}
+.toolbar button.board-menu-btn.active{
+  background:#ffe229;
+  color:#760000;
+}
+.toolbar button.result-switch.active{
+  background:#16a34a;
+  color:#fff;
+}
+.toolbar button.result-switch.off{
+  background:#fff;
+  color:#8b0000;
+}
+
+
+@media(max-width:700px){
+  .top-menu-wrap{left:8px;top:8px}
+  .menu-toggle{width:40px;height:40px;font-size:22px}
+  .toolbar{top:46px;width:220px;max-height:82vh;overflow:auto}
+}
+
+
+/* Safe icon polish - no external icon runtime */
+.menu-toggle{
+  font-family:Arial,Helvetica,sans-serif;
+}
+.toolbar button{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+
+/* ===== Safe stock card close/open ===== */
+.stock-close-row{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:5px;
+}
+.stock-close-btn{
+  border:1px solid rgba(255,255,255,.45);
+  background:rgba(0,0,0,.28);
+  color:#fff;
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:10px;
+  font-weight:900;
+  cursor:pointer;
+}
+.stock-closed-cover{
+  position:absolute;
+  inset:0;
+  z-index:120;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(35,0,0,.97);
+  border-radius:12px;
+  cursor:pointer;
+}
+.card.stock-is-closed .stock-closed-cover{
+  display:flex;
+}
+.stock-closed-text{
+  color:#fff;
+  font-size:42px;
+  font-weight:1000;
+  text-shadow:0 3px 10px rgba(0,0,0,.35);
+}
+
+
+/* ===== V136: กระดาน LIVE ลาวพัฒนา + ผล 4 ตัว ===== */
+.board.live-single-board{
+  grid-template-columns:minmax(320px,1360px);
+  justify-content:center;
+}
+.live-only-card{
+  width:100%;
+  min-height:0;
+  padding:14px;
+}
+.live-only-card .head{
+  grid-template-columns:82px 1fr;
+  gap:14px;
+  margin-bottom:12px;
+}
+.live-only-card .flag{
+  width:82px;
+  height:82px;
+  min-width:82px;
+  min-height:82px;
+}
+.live-only-card .name{
+  font-size:42px;
+}
+.live-only-card .time{
+  font-size:16px;
+}
+.lao-live-result-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;
+  align-items:stretch;
+}
+.live-facebook-viewer,
+.lao-result-panel{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  min-height:340px;
+  overflow:hidden;
+  border-radius:12px;
+  border:2px solid var(--theme-accent,#ffb0b0);
+}
+.live-facebook-viewer{
+  background:#111;
+}
+.live-facebook-viewer iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  background:#111;
+  pointer-events:auto !important;
+}
+.live-viewer-mask{
+  position:absolute;
+  top:8px;
+  left:8px;
+  z-index:20;
+  width:150px;
+  height:44px;
+  display:flex;
+  align-items:center;
+  padding:0 10px;
+  background:linear-gradient(90deg,#ff4444 0 62px,rgba(28,28,28,.96) 62px 100%);
+  border-radius:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,.26);
+  pointer-events:none;
+}
+.live-viewer-mask .live-label{
+  width:52px;
+  color:#fff;
+  font-size:20px;
+  font-weight:1000;
+  text-align:center;
+}
+.live-viewer-mask .viewer-hidden-text{
+  margin-left:13px;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  opacity:.92;
+}
+.lao-result-panel{
+  display:grid;
+  grid-template-rows:minmax(0,1.04fr) minmax(0,.96fr);
+  gap:12px;
+  padding:14px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,255,255,.14),transparent 42%),
+    linear-gradient(180deg,var(--theme-card,#c00000),var(--theme-card-dark,#7b0000));
+  box-shadow:inset 0 0 26px rgba(255,255,255,.05);
+}
+.lao-result-main,
+.lao-result-cell{
+  min-width:0;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:12px;
+  background:rgba(0,0,0,.14);
+}
+.lao-result-main{padding:10px 12px}
+.lao-result-pair{
+  min-height:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.lao-result-cell{padding:8px}
+.lao-result-label{
+  margin-bottom:7px;
+  color:#fff;
+  font-size:19px;
+  line-height:1.15;
+  font-weight:900;
+  text-align:center;
+  text-shadow:0 2px 4px rgba(0,0,0,.25);
+}
+.lao-result-main .lao-result-label{font-size:22px}
+.lao-result-panel .result{
+  width:100%;
+  flex:1;
+  height:auto;
+  min-height:0;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.lao-result-four{
+  font-size:clamp(58px,5.2vw,98px) !important;
+  letter-spacing:4px;
+}
+.lao-result-small{
+  font-size:clamp(43px,3.8vw,72px) !important;
+  letter-spacing:2px;
+}
+.lao-result-note{
+  position:absolute !important;
+  top:8px;
+  right:8px;
+  z-index:5;
+  margin:0 !important;
+  width:max-content !important;
+}
+.live-only-actions{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  margin-top:10px;
+}
+.live-open-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:34px;
+  padding:7px 12px;
+  border-radius:9px;
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  text-decoration:none;
+  font-size:12px;
+  font-weight:900;
+}
+@media(max-width:900px){
+  .board.live-single-board{grid-template-columns:1fr}
+  .lao-live-result-grid{grid-template-columns:1fr}
+  .live-only-card .head{grid-template-columns:58px 1fr}
+  .live-only-card .flag{
+    width:58px;height:58px;min-width:58px;min-height:58px;
+  }
+  .live-only-card .name{font-size:27px}
+  .live-only-card .time{font-size:12px}
+  .live-facebook-viewer,.lao-result-panel{min-height:230px}
+  .lao-result-label,.lao-result-main .lao-result-label{font-size:15px}
+  .lao-result-four{font-size:clamp(52px,14vw,86px) !important}
+  .lao-result-small{font-size:clamp(38px,10vw,62px) !important}
+}
+@media(max-width:430px){
+  .live-only-card{padding:8px}
+  .lao-live-result-grid,.lao-result-panel,.lao-result-pair{gap:8px}
+  .lao-result-panel{padding:8px}
+}
+
+
+:root{
+  --theme-bg:#250000;
+  --theme-primary:#b40000;
+  --theme-dark:#650000;
+  --theme-card:#c00000;
+  --theme-card-dark:#7b0000;
+  --theme-accent:#ff6262;
+  --theme-result:#e00000;
+  --theme-text:#ffffff;
+}
+
+body{
+  color:var(--theme-text) !important;
+  background:
+    radial-gradient(circle at 20% 0%,var(--theme-primary),transparent 38%),
+    linear-gradient(var(--theme-dark),var(--theme-bg)) !important;
+}
+.header{
+  border-color:var(--theme-accent) !important;
+  background:linear-gradient(var(--theme-dark),var(--theme-primary) 58%,var(--theme-dark)) !important;
+  box-shadow:0 0 14px var(--theme-accent) !important;
+}
+.live{
+  border-color:var(--theme-accent) !important;
+  background:linear-gradient(var(--theme-accent),var(--theme-primary)) !important;
+}
+.title,
+.name{
+  color:var(--theme-text) !important;
+}
+.title b,
+.ticker-text b{
+  color:var(--theme-accent) !important;
+}
+.ticker{
+  border-color:var(--theme-accent) !important;
+  background:var(--theme-dark) !important;
+}
+.ticker-label{
+  background:var(--theme-primary) !important;
+}
+.menu-toggle{
+  background:var(--theme-dark) !important;
+  border-color:var(--theme-accent) !important;
+}
+.toolbar{
+  background:var(--theme-dark) !important;
+}
+.toolbar button{
+  color:var(--theme-primary) !important;
+}
+.toolbar button.active{
+  background:var(--theme-accent) !important;
+  color:var(--theme-dark) !important;
+}
+.card{
+  background:linear-gradient(var(--theme-card),var(--theme-card-dark)) !important;
+  border-color:var(--theme-accent) !important;
+  box-shadow:
+    0 0 12px var(--theme-accent),
+    inset 0 0 16px rgba(255,255,255,.08) !important;
+}
+.time{
+  color:var(--theme-text) !important;
+  opacity:.88;
+}
+.viewer{
+  border-color:var(--theme-accent) !important;
+}
+.result{
+  color:var(--theme-result) !important;
+  border-color:var(--theme-accent) !important;
+}
+.bottom{
+  border-color:var(--theme-accent) !important;
+}
+.msg{
+  color:var(--theme-text) !important;
+}
+.source{
+  color:var(--theme-text) !important;
+}
+
+
+.name-link{
+  color:inherit;
+  text-decoration:none;
+  cursor:pointer;
+  display:inline-block;
+}
+.name-link:visited{
+  color:inherit;
+}
+.name-link:hover{
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+
+
+.viewer .frame-shot{
+  min-width:100%;
+}
+
+
+.stock-preview-stable-v123 stock-preview-stable-v126{
+  width:1200px !important;
+  height:1200px !important;
+  max-width:none !important;
+  object-fit:fill !important;
+  object-position:0 0 !important;
+}
+
+
+.stock-preview-stable-v126{
+  transition:none !important;
+  opacity:1 !important;
+}
+
+
+.google-finance-stable-v128{
+  width:1200px !important;
+  height:1200px !important;
+  max-width:none !important;
+  object-fit:fill !important;
+  object-position:0 0 !important;
+}
+
+
+/* ===== V129 live market card: server-side Google Finance/SZSE ===== */
+.frame-custom{
+  position:absolute;
+  inset:0;
+  width:100% !important;
+  height:100% !important;
+  left:0 !important;
+  top:0 !important;
+  transform:none !important;
+}
+.market-live-v129{
+  height:100%;
+  padding:10px 12px;
+  box-sizing:border-box;
+  background:#f7f8fa;
+  color:#202124;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:3px;
+  overflow:hidden;
+}
+.market-live-v129 .market-source-v129{
+  font-size:12px;
+  font-weight:800;
+  color:#5f6368;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.market-live-v129 .market-price-v129{
+  font-size:29px;
+  font-weight:900;
+  letter-spacing:-.8px;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.market-live-v129 .market-move-v129{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:13px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.market-live-v129 .market-move-v129.up{color:#0a9d50}
+.market-live-v129 .market-move-v129.down{color:#d93025}
+.market-live-v129 .market-bottom-v129{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:6px;
+  color:#6b7280;
+  font-size:9px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.market-live-v129 .market-bottom-v129 span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.market-live-v129 .market-error-v129{
+  color:#9b1c1c;
+  font-size:11px;
+  font-weight:800;
+}
+@media(max-width:760px){
+  .market-live-v129{padding:5px 7px;gap:1px}
+  .market-live-v129 .market-source-v129{font-size:8px}
+  .market-live-v129 .market-price-v129{font-size:18px}
+  .market-live-v129 .market-move-v129{font-size:9px;gap:4px}
+  .market-live-v129 .market-bottom-v129{font-size:7px}
+}
+
+
+/* ===== V142: YouTube / iframe floating mini player ===== */
+.iframe-source-v142{
+  margin-top:7px;
+  padding:7px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:9px;
+  background:rgba(0,0,0,.16);
+}
+.iframe-source-v142 label{
+  display:block;
+  margin-bottom:5px;
+  font-size:10px;
+  font-weight:900;
+  color:#fff;
+}
+.iframe-source-v142 input{
+  width:100%;
+  min-width:0;
+  height:30px;
+  padding:4px 7px;
+  border:1px solid #ffb0b0;
+  border-radius:7px;
+  background:#fff;
+  color:#222;
+  font:700 10px/1.2 Anuphan,sans-serif;
+}
+.iframe-source-actions-v142{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5px;
+  margin-top:5px;
+}
+.iframe-source-actions-v142 button{
+  min-width:0;
+  white-space:normal;
+}
+.viewer iframe.youtube-frame-v142{
+  width:100% !important;
+  height:100% !important;
+  left:0 !important;
+  top:0 !important;
+  transform:none !important;
+  pointer-events:auto !important;
+  background:#000 !important;
+}
+
+.media-dock-v142{
+  --dock-w:440px;
+  position:fixed;
+  right:12px;
+  bottom:12px;
+  width:min(var(--dock-w),calc(100vw - 18px));
+  z-index:2147483000;
+  border:2px solid var(--theme-accent,#ff5a5a);
+  border-radius:14px;
+  overflow:hidden;
+  background:#160000;
+  box-shadow:0 10px 38px rgba(0,0,0,.6),0 0 18px rgba(255,0,0,.35);
+  color:#fff;
+  font-family:Anuphan,sans-serif;
+}
+.media-dock-v142.hidden{display:none !important}
+.media-dock-v142.size-small{--dock-w:320px}
+.media-dock-v142.size-medium{--dock-w:440px}
+.media-dock-v142.size-large{--dock-w:680px}
+.media-dock-v142.minimized{
+  width:min(286px,calc(100vw - 18px));
+  height:48px;
+  overflow:hidden;
+}
+.media-dock-head-v142{
+  height:46px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:5px 6px 5px 10px;
+  background:linear-gradient(180deg,#b90000,#6d0000);
+  border-bottom:1px solid rgba(255,255,255,.2);
+  cursor:move;
+  user-select:none;
+  touch-action:none;
+}
+.media-dock-title-v142{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12px;
+  font-weight:900;
+}
+.media-dock-controls-v142{
+  display:flex;
+  gap:3px;
+  flex:0 0 auto;
+}
+.media-dock-controls-v142 button{
+  width:30px;
+  height:30px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:8px;
+  background:rgba(0,0,0,.25);
+  color:#fff;
+  font:900 11px/1 Anuphan,sans-serif;
+}
+.media-dock-url-v142{
+  display:flex;
+  gap:5px;
+  padding:7px;
+  background:#2b0000;
+}
+.media-dock-url-v142 input{
+  flex:1;
+  min-width:0;
+  height:32px;
+  border:1px solid #ff8c8c;
+  border-radius:8px;
+  padding:4px 8px;
+  background:#fff;
+  color:#222;
+  font:700 11px/1.2 Anuphan,sans-serif;
+}
+.media-dock-url-v142 button{
+  flex:0 0 auto;
+  border:1px solid #ffd0d0;
+  border-radius:8px;
+  padding:0 11px;
+  background:#d40000;
+  color:#fff;
+  font:900 11px/1 Anuphan,sans-serif;
+}
+.media-dock-player-v142{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  background:#000;
+}
+.media-dock-player-v142 iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  background:#000;
+}
+.media-dock-v142.minimized .media-dock-url-v142{display:none}
+.media-dock-v142.minimized .media-dock-player-v142{
+  position:absolute;
+  left:0;
+  top:0;
+  width:120px;
+  height:68px;
+  opacity:.015;
+  pointer-events:none;
+  overflow:hidden;
+}
+.media-dock-v142.minimized .media-dock-head-v142{
+  position:relative;
+  z-index:2;
+  border-bottom:0;
+}
+.media-dock-hint-v142{
+  padding:5px 8px 7px;
+  background:#2b0000;
+  color:#ffd6d6;
+  font-size:9px;
+  line-height:1.35;
+}
+.media-dock-v142.minimized .media-dock-hint-v142{display:none}
+@media(max-width:560px){
+  .media-dock-v142{
+    right:8px;
+    bottom:8px;
+    width:min(var(--dock-w),calc(100vw - 16px));
+  }
+  .media-dock-v142.size-large{--dock-w:calc(100vw - 16px)}
+  .media-dock-controls-v142 button{width:28px;height:28px}
+  .media-dock-title-v142{font-size:11px}
+}
+
+</style>
+<style id="luxe-ui-v154">
+/* ===== V154 LUXE GOLD UI =====
+   กติกา: ไม่แก้ขนาด/ระยะของ .page .board .card .viewer (ตำแหน่ง iframe คงเดิมทุกพิกเซล)
+   เปลี่ยนเฉพาะสี พื้นหลัง เงา ฟอนต์ และเพิ่มองค์ประกอบตกแต่ง */
+:root{
+  --gold-1:#fff6d2;
+  --gold-2:#ffd76a;
+  --gold-3:#f5b301;
+  --gold-4:#b8780a;
+  --gold-5:#5c3a00;
+  --gold-grad:linear-gradient(135deg,#fff6d2 0%,#ffd76a 20%,#f0a500 44%,#fff0b0 60%,#c88a0c 82%,#ffe08a 100%);
+}
+html{background:#0b0202 !important}
+body{
+  background:
+    radial-gradient(1100px 620px at 12% -8%,color-mix(in srgb,var(--theme-primary) 62%,transparent),transparent 62%),
+    radial-gradient(900px 560px at 100% 0%,rgba(255,186,48,.20),transparent 60%),
+    radial-gradient(900px 700px at 50% 115%,color-mix(in srgb,var(--theme-primary) 40%,transparent),transparent 60%),
+    linear-gradient(180deg,color-mix(in srgb,var(--theme-dark) 50%,#0b0202),color-mix(in srgb,var(--theme-bg) 40%,#050101)) !important;
+  background-attachment:fixed !important;
+  overflow-x:hidden;
+}
+::selection{background:#ffd76a;color:#3a2300}
+*{scrollbar-width:thin;scrollbar-color:#c88a0c rgba(0,0,0,.35)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.35)}
+::-webkit-scrollbar-thumb{background:linear-gradient(#ffd76a,#b8780a);border-radius:99px;border:2px solid rgba(0,0,0,.4)}
+
+/* ---------- ฉากหลังเคลื่อนไหว ---------- */
+#luxeBg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#luxeBg .luxe-aurora{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;will-change:transform}
+#luxeBg .luxe-aurora.a{width:46vw;height:46vw;left:-12vw;top:-16vw;background:radial-gradient(circle,rgba(255,196,64,.55),transparent 65%);animation:luxeDriftA 22s ease-in-out infinite alternate}
+#luxeBg .luxe-aurora.b{width:40vw;height:40vw;right:-10vw;top:28vh;background:radial-gradient(circle,color-mix(in srgb,var(--theme-accent) 70%,transparent),transparent 65%);animation:luxeDriftB 28s ease-in-out infinite alternate}
+#luxeBg .luxe-aurora.c{width:38vw;height:38vw;left:24vw;bottom:-22vw;background:radial-gradient(circle,rgba(255,150,30,.42),transparent 65%);animation:luxeDriftA 34s ease-in-out infinite alternate-reverse}
+#luxeBg .luxe-grid{position:absolute;inset:0;opacity:.5;
+  background-image:
+    linear-gradient(rgba(255,215,106,.055) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,215,106,.055) 1px,transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 30%,#000 10%,transparent 75%);
+          mask-image:radial-gradient(ellipse at 50% 30%,#000 10%,transparent 75%)}
+#luxeBg canvas{position:absolute;inset:0;width:100%;height:100%}
+#luxeBg .luxe-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 55%,rgba(0,0,0,.55) 100%)}
+@keyframes luxeDriftA{to{transform:translate3d(9vw,7vh,0) scale(1.18)}}
+@keyframes luxeDriftB{to{transform:translate3d(-8vw,-9vh,0) scale(1.22)}}
+
+.page{position:relative;z-index:1}
+
+/* ---------- ส่วนหัว ---------- */
+.header{
+  position:relative;overflow:hidden;
+  border-color:transparent !important;
+  border-radius:22px;
+  background:
+    radial-gradient(120% 140% at 50% -40%,rgba(255,226,140,.26),transparent 55%) padding-box,
+    linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.30)) padding-box,
+    linear-gradient(115deg,color-mix(in srgb,var(--theme-dark) 82%,#000),var(--theme-primary) 50%,color-mix(in srgb,var(--theme-dark) 82%,#000)) padding-box,
+    var(--gold-grad) border-box !important;
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.55),
+    0 0 34px color-mix(in srgb,var(--theme-accent) 38%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.28),
+    inset 0 -18px 30px rgba(0,0,0,.28) !important;
+}
+.header::before{ /* ลำแสงหมุนช้า ๆ */
+  content:"";position:absolute;left:50%;top:0;width:1500px;height:1500px;margin-left:-750px;margin-top:-700px;
+  background:repeating-conic-gradient(from 0deg,rgba(255,220,120,.10) 0 6deg,transparent 6deg 18deg);
+  -webkit-mask-image:radial-gradient(circle,#000 0,transparent 62%);mask-image:radial-gradient(circle,#000 0,transparent 62%);
+  animation:luxeRays 70s linear infinite;pointer-events:none}
+.header::after{ /* แสงกวาด */
+  content:"";position:absolute;top:0;bottom:0;left:0;width:34%;
+  background:linear-gradient(100deg,transparent,rgba(255,244,200,.20) 45%,rgba(255,255,255,.34) 50%,rgba(255,244,200,.20) 55%,transparent);
+  transform:translateX(-140%) skewX(-18deg);animation:luxeSweep 7.5s ease-in-out infinite;pointer-events:none}
+@keyframes luxeRays{to{transform:rotate(360deg)}}
+@keyframes luxeSweep{0%,55%{transform:translateX(-140%) skewX(-18deg)}100%{transform:translateX(440%) skewX(-18deg)}}
+.hero,.ticker{position:relative;z-index:2}
+
+.live{
+  position:relative;
+  border-color:#ffd9a0 !important;
+  background:linear-gradient(180deg,#ff5a4d,#c40016 60%,#7d000d) !important;
+  text-shadow:0 2px 0 rgba(90,0,0,.6);
+  font-family:Anuphan,sans-serif;letter-spacing:.5px;
+  animation:luxeLive 1.8s ease-out infinite}
+@keyframes luxeLive{0%{box-shadow:0 0 0 0 rgba(255,70,70,.75),0 8px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.45)}
+  100%{box-shadow:0 0 0 18px rgba(255,70,70,0),0 8px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.45)}}
+
+.title{
+  font-family:Anuphan,sans-serif;
+  letter-spacing:.5px;
+  text-shadow:0 2px 0 rgba(0,0,0,.45),0 6px 18px rgba(0,0,0,.55),0 0 26px color-mix(in srgb,var(--theme-accent) 55%,transparent) !important}
+.title b{
+  color:#ffd76a !important;
+  background:linear-gradient(100deg,#b8780a 0%,#ffd76a 18%,#fff8dc 32%,#f5b301 48%,#fff3c4 62%,#c88a0c 80%,#ffd76a 100%);
+  background-size:220% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:none !important;
+  filter:drop-shadow(0 3px 0 rgba(70,35,0,.75)) drop-shadow(0 0 14px rgba(255,190,50,.55));
+  animation:luxeGoldText 5s linear infinite}
+@keyframes luxeGoldText{to{background-position:-220% 0}}
+.board-date{
+  padding:0 16px;border-radius:999px;
+  color:#fff3c4;
+  background:rgba(0,0,0,.30);
+  box-shadow:inset 0 0 0 1px rgba(255,215,106,.45),0 4px 12px rgba(0,0,0,.3)}
+
+.ticker{
+  border-color:transparent !important;
+  background:
+    linear-gradient(180deg,rgba(20,4,4,.86),rgba(8,1,1,.86)) padding-box,
+    var(--gold-grad) border-box !important;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.6),0 6px 16px rgba(0,0,0,.35)}
+.ticker-label{
+  background:var(--gold-grad) !important;color:#3a2300;
+  font-family:Anuphan,sans-serif;
+  box-shadow:6px 0 14px rgba(0,0,0,.45);position:relative;z-index:1}
+.ticker-text{color:#fff7e0;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.ticker-text b{color:#ffd76a !important;text-shadow:0 0 10px rgba(255,200,60,.55)}
+
+/* เหรียญทองประดับส่วนหัว */
+.luxe-orn{position:absolute;top:0;height:112px;width:230px;z-index:1;pointer-events:none}
+.luxe-orn.l{left:64px}.luxe-orn.r{right:24px}
+.luxe-float{position:absolute;animation:luxeFloat 5s ease-in-out infinite alternate}
+.luxe-coin{
+  width:var(--s,54px);height:var(--s,54px);border-radius:50%;
+  display:grid;place-items:center;
+  font:900 calc(var(--s,54px)*.5)/1 Anuphan,sans-serif;color:#8a5a00;text-shadow:0 1px 0 #fff3b0,0 -1px 0 rgba(90,50,0,.5);
+  background:radial-gradient(circle at 32% 26%,#fffbe3 0,#ffe07a 30%,#f2aa00 62%,#a86a00 100%);
+  box-shadow:inset 0 0 0 calc(var(--s,54px)*.055) #f9cf55,inset 0 0 0 calc(var(--s,54px)*.09) #a86e00,0 8px 18px rgba(0,0,0,.5),0 0 22px rgba(255,196,48,.45);
+  animation:luxeSpin var(--d,4.5s) linear infinite}
+@keyframes luxeSpin{to{transform:rotateY(360deg)}}
+@keyframes luxeFloat{from{transform:translateY(-6px)}to{transform:translateY(8px)}}
+.luxe-spark{position:absolute;width:14px;height:14px;
+  background:radial-gradient(circle,#fff 0,#ffe9a6 30%,transparent 62%);
+  clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);
+  animation:luxeTwinkle 2.4s ease-in-out infinite}
+@keyframes luxeTwinkle{0%,100%{transform:scale(.2) rotate(0);opacity:0}50%{transform:scale(1.25) rotate(90deg);opacity:1}}
+@media(max-width:1180px){.luxe-orn{display:none}}
+
+/* ---------- เมนู ---------- */
+.menu-toggle{
+  border-color:#ffd76a !important;
+  background:linear-gradient(160deg,rgba(60,12,6,.92),rgba(14,3,2,.92)) !important;
+  color:#ffe9a6;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 8px 22px rgba(0,0,0,.5),0 0 16px rgba(255,196,48,.35),inset 0 1px 0 rgba(255,255,255,.25);
+  transition:transform .18s ease,box-shadow .18s ease}
+.menu-toggle:hover{transform:translateY(-1px) scale(1.04);box-shadow:0 10px 26px rgba(0,0,0,.55),0 0 24px rgba(255,196,48,.6),inset 0 1px 0 rgba(255,255,255,.25)}
+.menu-toggle.active{background:var(--gold-grad) !important;color:#3a2300}
+.toolbar{
+  border-color:rgba(255,215,106,.55);
+  background:linear-gradient(180deg,#2c0906,#0d0202) !important;
+  opacity:1;
+  box-shadow:0 22px 50px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.14);
+  transform-origin:top left}
+.toolbar.show{animation:luxeMenu .22s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes luxeMenu{from{transform:translateY(-8px) scale(.96)}}
+.toolbar button{
+  background:rgba(255,255,255,.07);
+  color:#fff7e0 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
+  transition:background .15s ease,transform .15s ease,box-shadow .15s ease}
+.toolbar button:hover{background:rgba(255,215,106,.18);box-shadow:inset 0 0 0 1px rgba(255,215,106,.55);transform:translateX(2px)}
+.toolbar button.active,
+.toolbar button.board-menu-btn.active{
+  background:var(--gold-grad) !important;color:#3a2300 !important;
+  box-shadow:0 4px 14px rgba(255,186,48,.35),inset 0 1px 0 rgba(255,255,255,.6)}
+.toolbar button.result-switch.active{background:linear-gradient(180deg,#22c55e,#0f8a3c) !important;color:#fff !important}
+.toolbar button.result-switch.off{background:rgba(255,255,255,.07) !important;color:#ffc9c9 !important}
+.toolbar .menu-section{color:#ffd76a;letter-spacing:1.2px}
+.toolbar .menu-divider{background:linear-gradient(90deg,transparent,rgba(255,215,106,.5),transparent)}
+
+/* ---------- การ์ด (ขนาด/ระยะเดิมทั้งหมด) ---------- */
+.card{
+  border-color:transparent !important;
+  border-radius:16px;
+  background:
+    radial-gradient(130% 70% at 50% -12%,rgba(255,232,160,.20),transparent 60%) padding-box,
+    linear-gradient(165deg,color-mix(in srgb,var(--theme-card) 86%,#000) 0%,color-mix(in srgb,var(--theme-card-dark) 62%,#0d0101) 100%) padding-box,
+    linear-gradient(140deg,#fff3c4 0%,#f5b301 26%,#7a4e00 50%,#ffd76a 76%,#fff3c4 100%) border-box !important;
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.50),
+    0 0 20px color-mix(in srgb,var(--theme-accent) 30%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.22),
+    inset 0 -22px 30px rgba(0,0,0,.22) !important;
+  transition:box-shadow .25s ease,filter .25s ease}
+.card:hover{
+  box-shadow:
+    0 16px 36px rgba(0,0,0,.55),
+    0 0 34px rgba(255,196,48,.55),
+    inset 0 1px 0 rgba(255,255,255,.28),
+    inset 0 -22px 30px rgba(0,0,0,.22) !important}
+.card::after{ /* แสงกวาดบนการ์ด (อยู่ใต้ iframe/ผล) */
+  content:"";position:absolute;top:0;bottom:0;left:0;width:45%;z-index:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,240,190,.16) 48%,rgba(255,255,255,.26) 50%,rgba(255,240,190,.16) 52%,transparent);
+  transform:translateX(-160%) skewX(-16deg);
+  animation:luxeCardSweep 9s ease-in-out infinite}
+.card:nth-child(3n+2)::after{animation-delay:1.6s}
+.card:nth-child(3n)::after{animation-delay:3.2s}
+.card:nth-child(4n+1)::after{animation-delay:4.6s}
+@keyframes luxeCardSweep{0%,62%{transform:translateX(-160%) skewX(-16deg)}100%{transform:translateX(400%) skewX(-16deg)}}
+.card>.head,.card>.results,.card>.adjust,.card>.stock-close-row,.card>.lao-live-result-grid,.card>.live-only-actions,.card>.source{position:relative;z-index:1}
+.card>.viewer{z-index:2}
+
+.board.luxe-enter .card{animation:luxeCardIn .7s cubic-bezier(.2,.8,.25,1) backwards}
+.board.luxe-enter .card:nth-child(2){animation-delay:.05s}
+.board.luxe-enter .card:nth-child(3){animation-delay:.10s}
+.board.luxe-enter .card:nth-child(4){animation-delay:.15s}
+.board.luxe-enter .card:nth-child(5){animation-delay:.20s}
+.board.luxe-enter .card:nth-child(6){animation-delay:.25s}
+.board.luxe-enter .card:nth-child(7){animation-delay:.30s}
+.board.luxe-enter .card:nth-child(8){animation-delay:.35s}
+.board.luxe-enter .card:nth-child(9){animation-delay:.40s}
+.board.luxe-enter .card:nth-child(10){animation-delay:.45s}
+.board.luxe-enter .card:nth-child(n+11){animation-delay:.50s}
+@keyframes luxeCardIn{from{opacity:0;transform:translateY(26px) scale(.96)}}
+
+.flag{
+  border-color:#ffd76a;
+  box-shadow:0 0 0 2px rgba(60,30,0,.55),0 0 16px rgba(255,196,48,.6),0 6px 12px rgba(0,0,0,.4)}
+.name{text-shadow:0 2px 4px rgba(0,0,0,.45)}
+.time{color:#ffe9b0 !important;opacity:.95}
+
+/* กรอบ iframe: เปลี่ยนแค่สีเส้นและเงา ไม่แตะขนาด */
+.viewer{
+  border-color:#f0c04a !important;
+  box-shadow:0 0 0 1px rgba(60,30,0,.6),0 6px 14px rgba(0,0,0,.4),0 0 14px rgba(255,196,48,.28)}
+.live-facebook-viewer,.lao-result-panel{
+  border-color:#f0c04a;
+  box-shadow:0 0 0 1px rgba(60,30,0,.6),0 10px 24px rgba(0,0,0,.45),0 0 18px rgba(255,196,48,.25)}
+
+/* ---------- ช่องผลรางวัล ---------- */
+.result{
+  position:relative;overflow:hidden;
+  font-family:Anuphan,sans-serif;
+  background:linear-gradient(180deg,#ffffff 0%,#fff7dc 52%,#ffe39a 100%);
+  border-color:#f1c24b !important;
+  text-shadow:0 1px 0 #fff,0 2px 5px rgba(120,60,0,.22);
+  box-shadow:inset 0 1px 0 #fff,inset 0 -7px 12px rgba(214,150,0,.22),0 5px 12px rgba(0,0,0,.38),0 0 12px rgba(255,196,48,.25)}
+.result::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:46%;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,0))}
+.result.waiting{
+  color:#ffd76a !important;
+  background:linear-gradient(110deg,rgba(0,0,0,.36) 30%,rgba(255,215,106,.20) 50%,rgba(0,0,0,.36) 70%);
+  background-size:240% 100%;
+  border-color:rgba(255,215,106,.45) !important;
+  text-shadow:0 0 10px rgba(255,196,48,.6);
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.5);
+  animation:luxeWait 2.2s linear infinite}
+.result.waiting::after{display:none}
+@keyframes luxeWait{from{background-position:120% 0}to{background-position:-120% 0}}
+.result.luxe-pop{animation:luxePop .9s cubic-bezier(.2,1.4,.4,1)}
+@keyframes luxePop{
+  0%{transform:scale(.6);filter:brightness(2.2)}
+  45%{transform:scale(1.12);box-shadow:0 0 0 6px rgba(255,215,106,.55),0 0 40px rgba(255,196,48,.95)}
+  100%{transform:scale(1);filter:none}}
+
+.lao-result-panel{
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,226,140,.22),transparent 46%),
+    linear-gradient(180deg,color-mix(in srgb,var(--theme-card) 80%,#000),color-mix(in srgb,var(--theme-card-dark) 60%,#0d0101))}
+.lao-result-main,.lao-result-cell{border-color:rgba(255,215,106,.45);background:rgba(0,0,0,.26);box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+.lao-result-label{color:#ffe9a6;font-family:Anuphan,sans-serif}
+.live-viewer-mask{box-shadow:0 0 0 1px rgba(255,215,106,.6),0 4px 12px rgba(0,0,0,.45)}
+
+.source,.live-open-btn,.stock-close-btn{
+  background:rgba(0,0,0,.30);
+  color:#ffe9a6 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,215,106,.45);
+  transition:background .15s ease}
+.source:hover,.live-open-btn:hover,.stock-close-btn:hover{background:rgba(255,215,106,.22)}
+.stock-close-btn{border-color:transparent}
+.stock-closed-cover{background:
+  radial-gradient(circle at 50% 40%,rgba(255,196,48,.16),transparent 60%),
+  rgba(12,2,2,.97)}
+.stock-closed-text{
+  font-family:Anuphan,sans-serif;
+  background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:none;filter:drop-shadow(0 3px 8px rgba(0,0,0,.6))}
+
+.adjust{background:rgba(0,0,0,.42);box-shadow:inset 0 0 0 1px rgba(255,215,106,.28)}
+.adjust-title{color:#ffd76a}
+.adjust button{background:linear-gradient(180deg,#fffdf2,#ffe9a6);color:#5c3a00}
+.adjust button:hover{filter:brightness(1.08)}
+.iframe-source-v142{border-color:rgba(255,215,106,.35)}
+.iframe-source-v142 input,.media-dock-url-v142 input{border-color:#f1c24b}
+
+/* ---------- แถบล่าง ---------- */
+.bottom{
+  position:relative;overflow:hidden;
+  border-color:transparent !important;
+  border-radius:18px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.30)) padding-box,
+    linear-gradient(115deg,color-mix(in srgb,var(--theme-dark) 82%,#000),var(--theme-primary) 50%,color-mix(in srgb,var(--theme-dark) 82%,#000)) padding-box,
+    var(--gold-grad) border-box;
+  box-shadow:0 14px 34px rgba(0,0,0,.5),0 0 24px color-mix(in srgb,var(--theme-accent) 30%,transparent),inset 0 1px 0 rgba(255,255,255,.22)}
+.clock{
+  color:#ffd76a;
+  background:linear-gradient(180deg,#1a0a02,#070201);
+  text-shadow:0 0 8px rgba(255,196,48,.9),0 0 22px rgba(255,150,20,.55);
+  box-shadow:inset 0 0 0 2px #c88a0c,inset 0 0 0 3px #3a2300,inset 0 6px 16px rgba(0,0,0,.8),0 4px 12px rgba(0,0,0,.4);
+  font-variant-numeric:tabular-nums}
+.msg{text-shadow:0 2px 4px rgba(0,0,0,.5);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+
+/* ---------- เครื่องเล่นลอย ---------- */
+.media-dock-v142{
+  border-color:#f0c04a;
+  background:#0d0202;
+  box-shadow:0 18px 48px rgba(0,0,0,.7),0 0 22px rgba(255,196,48,.35)}
+.media-dock-head-v142{background:linear-gradient(180deg,color-mix(in srgb,var(--theme-primary) 80%,#000),#250404)}
+.media-dock-title-v142{color:#ffe9a6}
+.media-dock-controls-v142 button{border-color:rgba(255,215,106,.5);color:#ffe9a6;cursor:pointer}
+.media-dock-controls-v142 button:hover{background:rgba(255,215,106,.25)}
+.media-dock-url-v142,.media-dock-hint-v142{background:#160505}
+.media-dock-url-v142 button{background:var(--gold-grad);color:#3a2300;border-color:#fff3c4;cursor:pointer}
+.media-dock-hint-v142{color:#e9d3a0}
+
+@media(max-width:760px){
+  .header{border-radius:16px}
+  .card:not(.live-only-card) .head{grid-template-columns:56px 1fr} /* ธงกว้าง 56px เดิมทับชื่อบนมือถือ */
+  .board-date{padding:0 10px}
+  #luxeBg .luxe-aurora{filter:blur(46px)}
+}
+@media(prefers-reduced-motion:reduce){
+  #luxeBg .luxe-aurora,.header::before,.header::after,.card::after,.title b,.live,.luxe-coin,.luxe-float,.luxe-spark,
+  .result.waiting,.board.luxe-enter .card,.result.luxe-pop{animation:none !important}
+}
+
+/* ===== V155: ประวัติเพลง + ซ่อนเครื่องเล่นแบบหายไปเลย (เสียงยังเล่นต่อ) ===== */
+.media-dock-controls-v142 button{flex:0 0 auto}
+.media-dock-controls-v142 .dock-hist-btn,.media-dock-controls-v142 .dock-hide-btn{font-size:13px}
+.media-dock-v142.stealth{
+  left:auto !important;top:auto !important;right:0 !important;bottom:0 !important;
+  width:160px !important;height:auto !important;min-height:0 !important;
+  opacity:.012 !important;pointer-events:none !important;border:0 !important;box-shadow:none !important;
+  z-index:0 !important;overflow:hidden}
+.media-dock-v142.stealth .media-dock-head-v142,
+.media-dock-v142.stealth .media-dock-url-v142,
+.media-dock-v142.stealth .media-dock-hint-v142,
+.media-dock-v142.stealth .dock-hist-v155{display:none !important}
+.media-dock-v142.stealth .media-dock-player-v142{position:relative;opacity:1;width:160px;height:90px}
+.dock-hist-v155{
+  display:none;max-height:220px;overflow:auto;background:#160505;
+  border-top:1px solid rgba(255,215,106,.25);padding:4px}
+.media-dock-v142.show-hist .dock-hist-v155{display:block}
+.media-dock-v142.minimized .dock-hist-v155{display:none}
+.dock-hist-empty-v155{padding:12px 8px;text-align:center;color:#e9d3a0;font-size:11px}
+.dock-hist-row-v155{display:flex;align-items:center;gap:6px;padding:3px 4px;border-radius:8px}
+.dock-hist-row-v155:hover{background:rgba(255,215,106,.12)}
+.dock-hist-row-v155.now{background:rgba(255,215,106,.18);box-shadow:inset 0 0 0 1px rgba(255,215,106,.5)}
+.dock-hist-open-v155{
+  flex:1;min-width:0;display:flex;align-items:center;gap:8px;text-align:left;
+  background:none;border:0;color:#fff7e0;cursor:pointer;padding:2px;font:700 11px/1.25 Anuphan,sans-serif}
+.dock-hist-open-v155 img{width:48px;height:27px;object-fit:cover;border-radius:4px;flex:0 0 auto;background:#000}
+.dock-hist-ico-v155{width:48px;height:27px;border-radius:4px;background:#2b0000;display:grid;place-items:center;flex:0 0 auto;font-size:14px}
+.dock-hist-txt-v155{min-width:0;display:flex;flex-direction:column}
+.dock-hist-txt-v155 b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:800}
+.dock-hist-txt-v155 small{color:#cbb27a;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock-hist-del-v155{flex:0 0 auto;width:24px;height:24px;border:0;border-radius:6px;background:rgba(0,0,0,.3);color:#ffb0b0;cursor:pointer;font-size:12px}
+.dock-hist-del-v155:hover{background:rgba(255,80,80,.3)}
+.dock-hist-clear-v155{display:block;width:100%;margin-top:4px;padding:6px;border:1px solid rgba(255,215,106,.35);border-radius:8px;background:none;color:#ffd76a;cursor:pointer;font:800 10px Anuphan,sans-serif}
+.dock-playing-badge-v155{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;background:#16a34a;color:#fff;font-size:9px;animation:luxeLive 1.8s ease-out infinite}
+
+/* ===== V156: ใกล้เวลาผลออก 5 นาที -> ช่องผลหมุน "กำลังออกผล" ===== */
+.result.luxe-drawing{color:transparent !important;text-shadow:none !important;font-size:0 !important;
+  background:linear-gradient(110deg,rgba(0,0,0,.40) 30%,rgba(255,215,106,.28) 50%,rgba(0,0,0,.40) 70%) !important;
+  background-size:240% 100%;border-color:#ffd76a !important;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.5),0 0 16px rgba(255,196,48,.55) !important;
+  animation:luxeWait 1.4s linear infinite,luxeGlow 1.4s ease-in-out infinite alternate}
+.result.luxe-drawing::before{
+  content:"";position:absolute;left:50%;top:50%;width:var(--rs,26px);height:var(--rs,26px);margin:calc(var(--rs,26px)/-2) 0 0 calc(var(--rs,26px)/-2);
+  border-radius:50%;border:3px solid rgba(255,215,106,.25);border-top-color:#ffd76a;border-right-color:#ffd76a;
+  box-shadow:0 0 10px rgba(255,196,48,.8);animation:luxeSpinRing .75s linear infinite;z-index:2}
+.result.luxe-drawing::after{
+  display:block !important;content:"กำลังออกผล";position:absolute;left:0;right:0;bottom:3px;top:auto;height:auto;
+  font:800 10px/1 Anuphan,sans-serif;color:#ffe9a6;text-align:center;letter-spacing:.2px;
+  background:none;text-shadow:0 1px 3px rgba(0,0,0,.9);animation:luxeBlink 1s ease-in-out infinite;z-index:2}
+.result.luxe-drawing.luxe-big::before{--rs:40px}
+.result.luxe-drawing.luxe-big::after{font-size:13px;bottom:6px}
+.result.luxe-drawing.luxe-big::before{margin-top:-26px}
+@keyframes luxeSpinRing{to{transform:rotate(360deg)}}
+@keyframes luxeBlink{50%{opacity:.45}}
+@keyframes luxeGlow{from{filter:brightness(1)}to{filter:brightness(1.25)}}
+@media(max-width:760px){.result.luxe-drawing::after{font-size:8px;bottom:2px}.result.luxe-drawing::before{--rs:20px;border-width:2px}}
+@media(max-width:430px){.result.luxe-drawing::after{display:none !important}}
+@media(prefers-reduced-motion:reduce){.result.luxe-drawing,.result.luxe-drawing::before,.result.luxe-drawing::after{animation:none !important}}
+</style>
+</head>
+<body>
+<main class="page">
+<section class="header">
+  <div class="hero"><div class="live">▶ LIVE</div><div class="hero-copy"><h1 class="title" id="boardTitle"><b>ไลฟ์สด</b> กระดานเช้า</h1><div class="board-date" id="boardDate">วันที่ --</div></div></div>
+  <div class="ticker"><div class="ticker-label">▶ LIVE</div><div class="ticker-track"><div class="ticker-text" id="tickerText"></div></div></div>
+</section>
+
+<div class="top-menu-wrap">
+  <button class="menu-toggle" id="menuToggle" onclick="toggleTopMenu()" aria-label="เมนู">☰</button>
+  <div class="toolbar" id="topMenu">
+    <div class="menu-section">เลือกช่วง</div>
+    <button type="button" class="board-menu-btn" id="tabMorning" onclick="goBoard('morning');closeTopMenu()">🌅 เช้า</button>
+    <button type="button" class="board-menu-btn" id="tabAfternoon" onclick="goBoard('afternoon');closeTopMenu()">☀️ บ่าย</button>
+    <button type="button" class="board-menu-btn" id="tabEvening" onclick="goBoard('evening');closeTopMenu()">🌇 เย็น</button>
+    <button type="button" class="board-menu-btn" id="tabHanoi" onclick="goBoard('hanoi');closeTopMenu()">🇻🇳 ฮานอย</button>
+    <button type="button" class="board-menu-btn" id="tabLaoDevelopment" onclick="goBoard('lao-development');closeTopMenu()">🇱🇦 ลาวพัฒนา LIVE</button>
+    <button type="button" class="board-menu-btn" id="tabNight" onclick="goBoard('night');closeTopMenu()">🌙 ดึก</button>
+    <button type="button" class="board-menu-btn" id="tabTest" onclick="goBoard('test');closeTopMenu()">🧪 ทดสอบ</button>
+
+    <div class="menu-divider"></div>
+    <div class="menu-section">แสดงผล</div>
+    <button id="resultToggle" class="result-switch active" onclick="toggleResults()">🔒 ปิดแสดงผลหวย</button>
+    <button id="vipResultToggle" class="result-switch active" onclick="toggleVipNote()">✅ VIP ผล</button>
+    <button id="autoResultToggle" class="result-switch active" onclick="toggleAutoNote()">✅ AUTO ผล</button>
+
+    <div class="menu-divider"></div>
+    <div class="menu-section">ตั้งค่า</div>
+    <button id="adjustToggle" onclick="toggleAdjust()">⚙️ ปรับ iframe + กรอบ</button>
+    <button id="boxToggle" class="active" onclick="toggleBoxes()">🟥🟩 แดง/เขียว</button>
+    <button onclick="showMediaDockV142();closeTopMenu()">🎵 YouTube / เพลงลอย</button>
+    <button onclick="refreshSnapshots()">🔄 รีเฟรชหน้าที่ถูกบล็อก</button>
+
+    <div class="menu-divider"></div>
+    <div class="menu-section">หลังบ้าน</div>
+    <button type="button" onclick="openAdminV89()">🛠️ แก้ / เพิ่มผลหวย</button>
+    <button type="button" onclick="window.open('remote.html','_blank')">📱 รีโมทคุมหน้าไลฟ์</button>
+
+    <div style="font-size:9px;color:rgba(255,255,255,.55);text-align:center;padding:3px 2px 0">Flags by Flaticon</div>
+  </div>
+</div>
+
+<div id="mediaDockV142" class="media-dock-v142 size-medium hidden" aria-label="YouTube mini player">
+  <div class="media-dock-head-v142" id="mediaDockHeadV142">
+    <div class="media-dock-title-v142" id="mediaDockTitleV142">🎵 YouTube / iframe ลอย</div>
+    <div class="media-dock-controls-v142">
+      <button type="button" onclick="setMediaDockSizeV142('small')" title="เล็ก">S</button>
+      <button type="button" onclick="setMediaDockSizeV142('medium')" title="กลาง">M</button>
+      <button type="button" onclick="setMediaDockSizeV142('large')" title="ใหญ่">L</button>
+      <button type="button" id="mediaDockMinBtnV142" onclick="toggleMediaDockMinV142()" title="ย่อ/ขยาย">−</button>
+      <button type="button" onclick="closeMediaDockV142()" title="ปิดและหยุดเสียง">×</button>
+    </div>
+  </div>
+  <div class="media-dock-url-v142">
+    <input id="mediaDockUrlV142" type="url" inputmode="url" placeholder="วางลิงก์ YouTube หรือ URL iframe ที่นี่">
+    <button type="button" onclick="loadMediaDockUrlV142()">เปิด</button>
+  </div>
+  <div class="media-dock-player-v142">
+    <iframe id="mediaDockFrameV142" src="about:blank" allow="autoplay; encrypted-media; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+  <div class="media-dock-hint-v142">กด − เพื่อย่อเหลือแถบเล็ก โดย iframe ยังอยู่และเสียงยังเล่นต่อ • กด × เพื่อหยุดและปิด</div>
+</div>
+
+<section class="board" id="board"></section>
+
+<footer class="bottom">
+  <div class="clock" id="clock">00:00:00</div>
+  <div class="msg"><div class="msg-track" id="footerMessageText">❤️ ฝากกดไลก์ติดตามช่อง ❤️ เพื่อเป็นกำลังใจให้น้องแอดด้วยนะครับบบ</div></div>
+</footer>
+</main>
+
+<script>
+const MORNING_ITEMS = [
+  {key:'lao_extra',flag:'🇱🇦',name:'ลาว Extra',draw:'08:30',url:'https://laoextra.com/',w:1280,h:1800,scale:.245,left:-6,top:-250,boxes:[{color:'red',x:114,y:78,w:78,h:48},{color:'blue',x:50,y:78,w:64,h:48}]},
+  {key:'nikkei_vip',flag:'🇯🇵',name:'นิเคอิเช้า VIP',draw:'09:05',url:'https://stocks-vip.com/',w:1280,h:1600,scale:.245,left:-5,top:-80,boxes:[{color:'red',x:128,y:84,w:58,h:26},{color:'blue',x:21,y:84,w:84,h:26}]},
+  {key:'nikkei',flag:'🇯🇵',name:'นิเคอิเช้า',draw:'09:30',url:"https://www.google.com/finance/beta/quote/NI225:INDEXNIKKEI?hl=en",mode:'custom',layoutVersion:129,w:1400,h:2400,scale:.245,left:-5,top:-80,boxes:[{color:'red',x:116,y:22,w:88,h:44},{color:'blue',x:0,y:0,w:0,h:0}]},
+  {key:'hanoi_asean',flag:'🇻🇳',name:'ฮานอยอาเซียน',draw:'09:30',url:'https://hanoiasean.com/',w:1180,h:1500,scale:.265,left:-2,top:-65,boxes:[{color:'red',x:87,y:47,w:50,h:34},{color:'blue',x:103,y:82,w:36,h:27}]},
+  {key:'china_vip',flag:'🇨🇳',name:'จีนเช้า VIP',draw:'10:05',url:'https://shenzhenindex.com/',w:1280,h:1600,scale:.245,left:-4,top:-60,boxes:[{color:'red',x:80,y:46,w:74,h:40},{color:'blue',x:175,y:90,w:28,h:20}]},
+  {key:'china',flag:'🇨🇳',name:'จีนเช้า',draw:'10:30',url:"https://www.szse.cn/English/index.html",mode:'iframe',layoutVersion:131,w:1400,h:2400,scale:.245,left:-5,top:-80,boxes:[{color:'red',x:92,y:34,w:78,h:43},{color:'blue',x:184,y:82,w:34,h:23}]},
+  {key:'lao_tv',flag:'🇱🇦',name:'ลาว TV',draw:'10:30',url:'https://lao-tv.com/',w:1280,h:1800,scale:.245,left:-5,top:-265,boxes:[{color:'red',x:100,y:77,w:80,h:42},{color:'blue',x:45,y:77,w:56,h:42}]},
+  {key:'hsi_vip',flag:'🇭🇰',name:'ฮั่งเส็งเช้า VIP',draw:'10:35',url:'https://stocks-vip.com/',mode:'iframe',w:1280,h:8000,scale:.245,left:-5,top:-105,boxes:[{color:'red',x:78,y:63,w:55,h:40},{color:'blue',x:175,y:59,w:26,h:26}]},
+  {key:'hsi',flag:'🇭🇰',name:'ฮั่งเส็งเช้า',draw:'11:00',url:"https://www.google.com/finance/beta/quote/HSI:INDEXHANGSENG?hl=en",mode:'custom',layoutVersion:129,w:1400,h:2400,scale:.245,left:-5,top:-80,boxes:[{color:'red',x:110,y:38,w:76,h:40},{color:'blue',x:187,y:84,w:34,h:22}]},
+  {key:'hanoi_hd',flag:'🇻🇳',name:'ฮานอย HD',draw:'11:30',url:'https://xosohd.com/',w:1280,h:1800,scale:.245,left:-4,top:-320,boxes:[{color:'red',x:80,y:58,w:60,h:38},{color:'blue',x:126,y:92,w:36,h:28}]}
+];
+const AFTERNOON_ITEMS = [
+{
+    key:'hanoi_star',
+    flag:'🇻🇳',
+    name:'ฮานอย สตาร์',
+    draw:'12:30',
+    url:'https://minhngocstar.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'taiwan',
+    flag:'🇹🇼',
+    name:'หุ้นไต้หวัน',
+    draw:'12:30',
+    url:"https://www.google.com/finance/beta/quote/IX0001:TPE?hl=en",
+    mode:'custom',
+    layoutVersion:129,
+    w:1400,h:2400,scale:.245,left:-5,top:-80,
+    boxes:[{color:'red',x:110,y:34,w:82,h:42},{color:'blue',x:188,y:84,w:34,h:22}]
+  },
+  {
+    key:'korea_vip',
+    flag:'🇰🇷',
+    name:'เกาหลี VIP',
+    draw:'12:35',
+    url:'https://ktopvipindex.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-5,top:-110,
+    boxes:[{color:'red',x:124,y:74,w:64,h:42},{color:'blue',x:76,y:100,w:48,h:28}]
+  },
+  {
+    key:'nikkei_pm_vip',
+    flag:'🇯🇵',
+    name:'นิเคอิบ่าย VIP',
+    draw:'13:25',
+    url:'https://stocks-vip.com/',
+    mode:'iframe',
+    w:1280,h:8000,scale:.245,left:-5,top:-90,
+    boxes:[{color:'red',x:126,y:78,w:66,h:40},{color:'blue',x:72,y:100,w:52,h:28}]
+  },
+  {
+    key:'nikkei_pm',
+    flag:'🇯🇵',
+    name:'นิเคอิ - บ่าย',
+    draw:'13:00',
+    url:"https://www.google.com/finance/beta/quote/NI225:INDEXNIKKEI?hl=en",
+    mode:'custom',
+    layoutVersion:129,
+    w:1400,h:2400,scale:.245,left:-5,top:-80,
+    boxes:[{color:'red',x:116,y:22,w:88,h:44},{color:'blue',x:0,y:0,w:0,h:0}]
+  },
+  {
+    key:'korea',
+    flag:'🇰🇷',
+    name:'หุ้นเกาหลี',
+    draw:'13:30',
+    url:"https://www.google.com/finance/beta/quote/KOSPI:KRX?hl=en",
+    mode:'custom',
+    layoutVersion:129,
+    w:1400,h:2400,scale:.245,left:-5,top:-80,
+    boxes:[{color:'red',x:110,y:34,w:82,h:42},{color:'blue',x:188,y:84,w:34,h:22}]
+  },
+  {
+    key:'lao_hd',
+    flag:'🇱🇦',
+    name:'ลาว HD',
+    draw:'13:45',
+    url:'https://laoshd.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-5,top:-260,
+    boxes:[{color:'red',x:110,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'china_pm',
+    flag:'🇨🇳',
+    name:'หุ้นจีน - บ่าย',
+    draw:'14:00',
+    url:"https://www.szse.cn/English/index.html",
+    mode:'iframe',
+    layoutVersion:131,
+    w:1400,h:2400,scale:.245,left:-5,top:-80,
+    boxes:[{color:'red',x:92,y:34,w:78,h:43},{color:'blue',x:184,y:82,w:34,h:23}]
+  },
+  {
+    key:'china_pm_vip',
+    flag:'🇨🇳',
+    name:'จีนบ่าย VIP',
+    close:'14:20',
+    draw:'14:25',
+    url:'https://shenzhenindex.com/',
+    mode:'iframe',
+    w:1280,h:1600,scale:.245,left:-4,top:-60,
+    boxes:[{color:'red',x:80,y:46,w:74,h:40},{color:'blue',x:175,y:90,w:28,h:20}]
+  },
+
+  {
+    key:'hanoi_tv',
+    flag:'🇻🇳',
+    name:'ฮานอย TV',
+    draw:'14:30',
+    url:'https://minhngoctv.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  }
+];
+
+const EVENING_ITEMS = [
+{
+    key:'hsi_pm',
+    flag:'🇭🇰',
+    name:'ฮั่งเส็งบ่าย',
+    draw:'15:09',
+    url:"https://www.google.com/finance/beta/quote/HSI:INDEXHANGSENG?hl=en",
+    mode:'custom',
+    layoutVersion:129,
+    w:1400,h:2400,scale:.245,left:-5,top:-80,
+    boxes:[{color:'red',x:110,y:38,w:76,h:40},{color:'blue',x:187,y:84,w:34,h:22}]
+  },
+  {
+    key:'hsi_pm_vip',
+    flag:'🇭🇰',
+    name:'ฮั่งเส็งบ่าย VIP',
+    close:'15:20',
+    draw:'15:25',
+    url:'https://stocks-vip.com/',
+    mode:'iframe',
+    w:1280,h:8000,scale:.245,left:-5,top:-105,
+    boxes:[{color:'red',x:78,y:63,w:55,h:40},{color:'blue',x:175,y:59,w:26,h:26}]
+  },
+  {
+    key:'lao_star',
+    flag:'🇱🇦',
+    name:'ลาวสตาร์',
+    close:'15:40',
+    draw:'15:45',
+    url:'https://www.laostars.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:110,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'hanoi_redcross',
+    flag:'🇻🇳',
+    name:'ฮานอยกาชาด',
+    close:'16:10',
+    draw:'16:30',
+    url:'https://xosoredcross.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'singapore',
+    flag:'🇸🇬',
+    name:'หุ้นสิงคโปร์',
+    close:'15:55',
+    draw:'16:30',
+    url:"https://finance.yahoo.com/quote/%5ESTI/",
+    mode:'custom',
+    layoutVersion:129,
+    w:1400,h:2400,scale:.245,left:-5,top:-80,
+    boxes:[{color:'red',x:110,y:34,w:82,h:42},{color:'blue',x:188,y:84,w:34,h:22}]
+  },
+  {
+    key:'singapore_vip',
+    flag:'🇸🇬',
+    name:'สิงคโปร์ VIP',
+    close:'17:00',
+    draw:'17:05',
+    url:'https://stocks-vip.com/',
+    mode:'iframe',
+    w:1280,h:8000,scale:.245,left:-5,top:-110,
+    boxes:[{color:'red',x:124,y:74,w:64,h:42},{color:'blue',x:76,y:100,w:48,h:28}]
+  }
+];
+
+const HANOI_ITEMS = [
+  {
+    key:'hanoi_union',
+    flag:'🇻🇳',
+    name:'ฮานอยสามัคคี',
+    close:'17:10',
+    draw:'17:30',
+    url:'https://xosounion.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'hanoi_special',
+    flag:'🇻🇳',
+    name:'ฮานอยพิเศษ',
+    close:'17:05',
+    draw:'17:30',
+    url:'https://www.xsthm.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'hanoi_normal',
+    flag:'🇻🇳',
+    name:'ฮานอยปกติ',
+    close:'18:05',
+    draw:'18:30',
+    // V138: ใช้หน้าถ่ายทอดสด Miền Bắc โดยตรง เพื่อให้ iframe อัปเดตสดระหว่างการออกรางวัล
+    // หมายเหตุ: logic แสดงผล 3 ตัว/2 ตัวหลัง 18:30 ยังคงเดิม ไม่ได้เปลี่ยน
+    url:'https://www.minhngoc.com.vn/free/xo-so-truc-tiep/mien-bac.html',
+    mode:'iframe',
+    layoutVersion:139,
+    resultSource:'api', // V139: ผล 3 ตัว/2 ตัวใช้ API เท่านั้น; iframe ใช้ดูสดอย่างเดียว
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'hanoi_vip',
+    flag:'🇻🇳',
+    name:'ฮานอย VIP',
+    close:'19:05',
+    draw:'19:30',
+    url:'https://www.mlnhngoc.net/',
+    mode:'iframe',
+    resultSource:'api', // V139: ผลใช้ API; ไม่อ่านเลขจากหน้า iframe/HTML
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'hanoi_development',
+    flag:'🇻🇳',
+    name:'ฮานอยพัฒนา',
+    close:'19:10',
+    draw:'19:30',
+    url:'https://xosodevelop.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[
+      {color:'red',x:112,y:62,w:70,h:42},
+      {color:'blue',x:62,y:90,w:54,h:32}
+    ]
+  }
+];
+
+const NIGHT_ITEMS = [
+  {
+    // V147: การ์ดลาวพัฒนาในกระดานดึก (หน้าเดิม #lao-development ยังคงเหมือนเดิม)
+    key:'lao_development_night',
+    mirrorSettingsKey:'lao_development_live',
+    facebookVideoEmbed:true,
+    flag:'🇱🇦',
+    name:'ลาวพัฒนา',
+    close:'20:20',
+    draw:'20:30',
+    url:'https://web.facebook.com/laolotteryliveofficial/videos/1046426894937753/',
+    mode:'iframe',
+    w:760,h:430,scale:.34,left:0,top:0,
+    boxes:[]
+  },
+  {
+    key:'lao_union',
+    flag:'🇱🇦',
+    name:'ลาวสามัคคี',
+    close:'20:20',
+    draw:'20:30',
+    url:'https://laounion.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-220,
+    boxes:[{color:'red',x:120,y:70,w:68,h:42},{color:'blue',x:70,y:96,w:50,h:28}]
+  },
+  {
+    key:'lao_asean',
+    flag:'🇱🇦',
+    name:'ลาวอาเซียน',
+    close:'20:55',
+    draw:'21:00',
+    url:'https://lotterylaosasean.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'lao_union_vip',
+    flag:'🇱🇦',
+    name:'ลาวสามัคคี VIP',
+    close:'21:25',
+    draw:'21:30',
+    url:'https://laounionvip.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-220,
+    boxes:[{color:'red',x:120,y:70,w:68,h:42},{color:'blue',x:70,y:96,w:50,h:28}]
+  },
+  {
+    key:'lao_vip',
+    flag:'🇱🇦',
+    name:'ลาว VIP',
+    close:'21:20',
+    draw:'21:30',
+    url:'https://www.laosviplot.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-220,
+    boxes:[{color:'red',x:120,y:70,w:68,h:42},{color:'blue',x:70,y:96,w:50,h:28}]
+  },
+  {
+    key:'lao_star_vip',
+    flag:'🇱🇦',
+    name:'ลาวสตาร์ VIP',
+    close:'21:45',
+    draw:'22:00',
+    url:'https://laostars-vip.com/',
+    mode:'iframe',
+    w:1280,h:2400,scale:.245,left:-5,top:-180,
+    boxes:[{color:'red',x:118,y:70,w:70,h:42},{color:'blue',x:72,y:98,w:48,h:28}]
+  },
+  {
+    key:'hanoi_extra',
+    flag:'🇻🇳',
+    name:'ฮานอย Extra',
+    close:'22:10',
+    draw:'22:30',
+    url:'https://xosoextra.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'lao_redcross',
+    flag:'🇱🇦',
+    name:'ลาวกาชาด',
+    close:'23:25',
+    draw:'23:30',
+    url:'https://lao-redcross.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'dowjones_vip',
+    flag:'🇺🇸',
+    name:'ดาวโจนส์ VIP',
+    close:'00:10',
+    draw:'00:30',
+    nextDay:true,
+    url:'https://dowjonespowerball.com/',
+    mode:'iframe',
+    w:1280,h:2400,scale:.245,left:-5,top:-180,
+    boxes:[{color:'red',x:118,y:70,w:70,h:42},{color:'blue',x:72,y:98,w:48,h:28}]
+  },
+  {
+    key:'dowjones_star',
+    flag:'🇺🇸',
+    name:'ดาวโจนส์ STAR',
+    close:'01:05',
+    draw:'01:30',
+    nextDay:true,
+    url:'https://dowjonestar.com/',
+    mode:'iframe',
+    w:1280,h:2400,scale:.245,left:-5,top:-180,
+    boxes:[{color:'red',x:118,y:70,w:70,h:42},{color:'blue',x:72,y:98,w:48,h:28}]
+  }
+];
+
+
+const LAO_DEVELOPMENT_ITEMS = [
+  {
+    key:'lao_development_live',
+    flag:'🇱🇦',
+    name:'ลาวพัฒนา',
+    mode:'facebook-live',
+    liveUrl:'https://web.facebook.com/laolotteryliveofficial/videos/1046426894937753/',
+    hideViewers:true,
+    boxes:[]
+  }
+];
+
+const TEST_ITEMS = [
+  {
+    key:'lao_patuxay',
+    flag:'🇱🇦',
+    name:'ลาวประตูชัย',
+    draw:'05:45',
+    url:'https://laopatuxay.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  },
+  {
+    key:'lao_santipap',
+    flag:'🇱🇦',
+    name:'ลาวสันติภาพ',
+    draw:'06:45',
+    url:'https://laosantipap.com/',
+    mode:'iframe',
+    w:1280,h:2200,scale:.245,left:-4,top:-260,
+    boxes:[{color:'red',x:112,y:62,w:70,h:42},{color:'blue',x:62,y:90,w:54,h:32}]
+  }
+];
+
+
+
+let ITEMS = MORNING_ITEMS;
+let currentBoard = 'morning';
+
+
+
+const DEFAULT_SITE_THEME_V112={
+  bg:'#250000',
+  primary:'#b40000',
+  dark:'#650000',
+  card:'#c00000',
+  cardDark:'#7b0000',
+  accent:'#ff6262',
+  result:'#e00000',
+  text:'#ffffff'
+};
+
+function safeThemeColorV112(value,fallback){
+  const v=String(value||'').trim();
+
+  return /^#[0-9a-f]{6}$/i.test(v)
+    ? v
+    : fallback;
+}
+
+function applySiteThemeV112(theme){
+  const t={
+    ...DEFAULT_SITE_THEME_V112,
+    ...(theme||{})
+  };
+
+  const root=document.documentElement;
+
+  root.style.setProperty(
+    '--theme-bg',
+    safeThemeColorV112(t.bg,DEFAULT_SITE_THEME_V112.bg)
+  );
+  root.style.setProperty(
+    '--theme-primary',
+    safeThemeColorV112(t.primary,DEFAULT_SITE_THEME_V112.primary)
+  );
+  root.style.setProperty(
+    '--theme-dark',
+    safeThemeColorV112(t.dark,DEFAULT_SITE_THEME_V112.dark)
+  );
+  root.style.setProperty(
+    '--theme-card',
+    safeThemeColorV112(t.card,DEFAULT_SITE_THEME_V112.card)
+  );
+  root.style.setProperty(
+    '--theme-card-dark',
+    safeThemeColorV112(t.cardDark,DEFAULT_SITE_THEME_V112.cardDark)
+  );
+  root.style.setProperty(
+    '--theme-accent',
+    safeThemeColorV112(t.accent,DEFAULT_SITE_THEME_V112.accent)
+  );
+  root.style.setProperty(
+    '--theme-result',
+    safeThemeColorV112(t.result,DEFAULT_SITE_THEME_V112.result)
+  );
+  root.style.setProperty(
+    '--theme-text',
+    safeThemeColorV112(t.text,DEFAULT_SITE_THEME_V112.text)
+  );
+}
+
+function deepCopy(o){ return JSON.parse(JSON.stringify(o)); }
+
+let state = Object.fromEntries(
+  ITEMS.map(x => [x.key, deepCopy(x)])
+);
+
+let boxesVisible = true;
+let resultsVisible = true;
+let vipNoteVisible = true;
+let autoNoteVisible = true;
+let serverLoaded = false;
+
+
+const SITE_MESSAGES_V129={
+  tickers:{},
+  footer:''
+};
+
+function applySiteMessagesV129(value){
+  const v=value||{};
+
+  SITE_MESSAGES_V129.tickers=
+    v.tickers && typeof v.tickers==='object'
+      ? {...v.tickers}
+      : {};
+
+  SITE_MESSAGES_V129.footer=
+    String(v.footer||'').trim();
+
+  const footer=
+    document.getElementById('footerMessageText');
+
+  if(
+    footer &&
+    SITE_MESSAGES_V129.footer
+  ){
+    footer.textContent=
+      SITE_MESSAGES_V129.footer;
+  }
+
+  try{
+    setTickerForBoard();
+  }catch{}
+}
+
+function formatMarketNumberV129(value){
+  const n=Number(value);
+
+  if(!Number.isFinite(n)){
+    return '--';
+  }
+
+  return n.toLocaleString(
+    'en-US',
+    {
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    }
+  );
+}
+
+function renderLiveMarketRowV129(key,row){
+  const title=document.getElementById('market-title-'+key);
+  const current=document.getElementById('market-current-'+key);
+  const change=document.getElementById('market-change-'+key);
+  const percent=document.getElementById('market-percent-'+key);
+  const prev=document.getElementById('market-prev-'+key);
+  const updated=document.getElementById('market-updated-'+key);
+  const move=document.getElementById('market-move-'+key);
+
+  if(!current){
+    return;
+  }
+
+  if(
+    !row ||
+    row.ok===false ||
+    !Number.isFinite(Number(row.current))
+  ){
+    // V132:
+    // ถ้ารอบ refresh ใหม่พลาด อย่าล้างค่าที่แสดงอยู่
+    // ถ้ายังไม่เคยมีข้อมูลเลยค่อยแสดง "--"
+    if(
+      !current.dataset.hasValueV132
+    ){
+      current.textContent='--';
+
+      if(change) change.textContent='--';
+      if(percent) percent.textContent='--';
+      if(prev) prev.textContent='--';
+
+      if(updated){
+        updated.textContent='--';
+      }
+    }
+
+    return;
+  }
+
+  const currentNumber=Number(row.current);
+  const changeNumber=Number(row.change);
+  const percentNumber=Number(row.percent);
+  const prevNumber=Number(row.previousClose);
+
+  if(title){
+    title.textContent=
+      row.label ||
+      state[key]?.name ||
+      key;
+  }
+
+  current.textContent=
+    formatMarketNumberV129(
+      currentNumber
+    );
+
+  current.dataset.hasValueV132='1';
+
+  if(change){
+    change.textContent=
+      Number.isFinite(changeNumber)
+        ? (
+            (changeNumber>=0?'+':'') +
+            formatMarketNumberV129(changeNumber)
+          )
+        : '--';
+  }
+
+  if(percent){
+    percent.textContent=
+      Number.isFinite(percentNumber)
+        ? (
+            (percentNumber>=0?'+':'') +
+            percentNumber.toFixed(2) +
+            '%'
+          )
+        : '--';
+  }
+
+  if(prev){
+    prev.textContent=
+      Number.isFinite(prevNumber)
+        ? formatMarketNumberV129(prevNumber)
+        : '--';
+  }
+
+  if(updated){
+    updated.textContent=
+      row.stale===true
+        ? 'ข้อมูลล่าสุดที่ดึงได้'
+        : (
+            row.updatedText
+              ? String(row.updatedText)
+              : 'อัปเดตล่าสุด'
+          );
+  }
+
+  if(move){
+    move.className=
+      'market-move-v129 ' +
+      (
+        Number.isFinite(changeNumber)
+          ? (
+              changeNumber>=0
+                ? 'up'
+                : 'down'
+            )
+          : ''
+      );
+  }
+}
+
+let LIVE_MARKET_BUSY_V129=false;
+
+function refreshLiveMarketsV129(){
+  if(
+    LIVE_MARKET_BUSY_V129 ||
+    document.hidden ||
+    !Array.isArray(MANUAL_STOCK_KEYS) ||
+    !MANUAL_STOCK_KEYS.length
+  ){
+    return;
+  }
+
+  LIVE_MARKET_BUSY_V129=true;
+
+  const keys=
+    MANUAL_STOCK_KEYS
+      .filter(function(key){
+        const item=
+          ITEMS.find(x=>x.key===key);
+
+        return item && item.mode==='custom';
+      });
+
+  if(!keys.length){
+    LIVE_MARKET_BUSY_V129=false;
+    return;
+  }
+
+  fetch(
+    '/api/market-live-v135?keys='+
+    encodeURIComponent(keys.join(',')),
+    {
+      cache:'no-store'
+    }
+  )
+  .then(function(r){
+    return r.json();
+  })
+  .then(function(data){
+    const rows=
+      data &&
+      data.rows
+        ? data.rows
+        : {};
+
+    keys.forEach(function(key){
+      renderLiveMarketRowV129(
+        key,
+        rows[key]
+      );
+    });
+  })
+  .catch(function(err){
+    console.error(
+      'market-live-v129',
+      err
+    );
+  })
+  .finally(function(){
+    LIVE_MARKET_BUSY_V129=false;
+  });
+}
+
+function loadServerSettings(){
+  fetch('/api/settings',{cache:'no-store'})
+    .then(r=>r.json())
+    .then(function(res){
+      const saved=(res&&res.settings)||{};
+      const stockUrls=saved.market_live_urls_v129||{};
+      applySiteMessagesV129(saved.site_messages_v129||{});
+
+      applySiteThemeV112(saved.site_theme||{});
+
+      ITEMS.forEach(function(item){
+        const savedItem=saved[item.key];
+
+        if(savedItem){
+          const mustMatchVersion=!!item.layoutVersion;
+          const sameVersion=savedItem._layoutVersion===item.layoutVersion;
+
+          if(!mustMatchVersion||sameVersion){
+            state[item.key]=Object.assign({},deepCopy(item),savedItem);
+
+            if(!Array.isArray(state[item.key].boxes)){
+              state[item.key].boxes=deepCopy(item.boxes);
+            }
+          }else{
+            state[item.key]=deepCopy(item);
+          }
+        }
+
+        // V147: การ์ดลาวพัฒนาในรอบดึกเป็นสำเนาหน้าจอขนาดปกติ
+        // ใช้ URL LIVE จากหน้าลาวพัฒนาเดิม แต่ไม่แชร์ layout/config กัน
+        if(item.mirrorSettingsKey){
+          const sourceSaved=saved[item.mirrorSettingsKey];
+          const mirroredUrl=String(sourceSaved?.liveUrl||'').trim();
+          if(/^https?:\/\//i.test(mirroredUrl)){
+            state[item.key].url=mirroredUrl;
+          }
+        }
+
+        if(
+          stockUrls[item.key] &&
+          /^https?:\/\//i.test(String(stockUrls[item.key]))
+        ){
+          state[item.key].url=String(stockUrls[item.key]).trim();
+        }
+
+        applyAll(item.key);
+      });
+
+      serverLoaded=true;
+      showSaveStatus('โหลดค่าจาก Netlify แล้ว',true);
+    })
+    .catch(function(err){
+      serverLoaded=true;
+      showSaveStatus('โหลดค่าจาก Netlify ไม่สำเร็จ',false);
+      console.error(err);
+    });
+}
+
+function showSaveStatus(text, ok){
+  let el = document.getElementById('serverSaveStatus');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'serverSaveStatus';
+    el.style.cssText =
+      'position:fixed;right:14px;bottom:14px;z-index:99999;' +
+      'padding:9px 13px;border-radius:999px;font-weight:800;font-size:12px;' +
+      'box-shadow:0 6px 20px rgba(0,0,0,.28);transition:.2s';
+    document.body.appendChild(el);
+  }
+
+  el.textContent = text;
+  el.style.background = ok ? '#16a34a' : '#b91c1c';
+  el.style.color = '#fff';
+  el.style.opacity = '1';
+
+  clearTimeout(window.__saveToastTimer);
+  window.__saveToastTimer = setTimeout(function(){
+    el.style.opacity = '0';
+  }, 2200);
+}
+
+function boxHtml(key, box, i){
+  const cls = box.color === 'blue' ? 'focus-blue' : 'focus-red';
+  return `<div id="box-${key}-${i}" class="focus-box ${cls}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"></div>`;
+}
+
+function groupControls(key, label, idx){
+  const labelClass = idx === 0 ? '🟥 กรอบแดง' : '🟩 กรอบเขียว';
+  return `
+    <div class="adjust-group">
+      <div class="adjust-title">${labelClass}</div>
+      <div class="adjust-row">
+        <button onclick="moveBox('${key}',${idx},0,-4)">↑</button>
+        <button onclick="moveBox('${key}',${idx},-4,0)">←</button>
+        <button onclick="moveBox('${key}',${idx},4,0)">→</button>
+        <button onclick="moveBox('${key}',${idx},0,4)">↓</button>
+        <button onclick="toggleSingleBox('${key}',${idx})">ซ่อน</button>
+      </div>
+      <div class="adjust-row" style="margin-top:4px">
+        <button onclick="resizeBox('${key}',${idx},4,0)">W+</button>
+        <button onclick="resizeBox('${key}',${idx},-4,0)">W-</button>
+        <button onclick="resizeBox('${key}',${idx},0,4)">H+</button>
+        <button onclick="resizeBox('${key}',${idx},0,-4)">H-</button>
+        <button onclick="copyBox('${key}',${idx})">คัดลอกค่า</button>
+      </div>
+    </div>`;
+}
+
+
+function screenshotUrl(url, fullPage){
+  // เว็บทั่วไปใช้ภาพ crop ตามเดิม
+  // stocks-vip.com ใช้ fullpage เพื่อให้เลื่อนลงได้จริง ไม่เจอพื้นที่ขาว
+  const base = 'https://image.thum.io/get/maxAge/0/wait/5/width/1200/';
+  return base + (fullPage ? 'fullpage/' : 'crop/1200/') + url;
+}
+
+function effectiveStockPreviewUrlV123(key,url){
+  const clean=String(url||'').trim();
+  if(!clean) return '';
+
+  // Nikkei หน้า root โดน Cloudflare ตอน screenshot
+  // ใช้หน้า official profile ของ Nikkei 225 แทนสำหรับ "ภาพ preview" เท่านั้น
+  // ชื่อหวย/ลิงก์ต้นทางยังใช้ URL ที่ตั้งจากหลังบ้านได้เหมือนเดิม
+  if(
+    (key==='nikkei' || key==='nikkei_pm') &&
+    /^https?:\/\/indexes\.nikkei\.co\.jp\/en\/nkave\/?(?:\?.*)?$/i.test(clean)
+  ){
+    return "https://indexes.nikkei.co.jp/en/nkave/index/profile?idx=nk225";
+  }
+
+  // HSI /eng บางครั้งตอบ 404 กับ screenshot service
+  // ใช้หน้า root สำหรับ preview แต่ลิงก์ชื่อหวยยังเปิด URL ที่ตั้งในหลังบ้าน
+  if(
+    (key==='hsi' || key==='hsi_pm') &&
+    /^https?:\/\/(?:www\.)?hsi\.com\.hk\/eng\/?(?:\?.*)?$/i.test(clean)
+  ){
+    return "https://www.hsi.com.hk/";
+  }
+
+  return clean;
+}
+
+function googleFinanceStableUrlV128(key,url){
+  const clean=String(url||'').trim();
+
+  if(key==='taiwan'){
+    return "https://www.google.com/finance/beta/quote/IX0001:TPE?hl=en";
+  }
+
+  if(key==='korea'){
+    return "https://www.google.com/finance/beta/quote/KOSPI:KRX?hl=en";
+  }
+
+  if(key==='singapore'){
+    return "https://finance.yahoo.com/quote/%5ESTI/";
+  }
+
+  return clean;
+}
+
+function stockPreviewUrlV121(key,url){
+  let clean=effectiveStockPreviewUrlV123(key,url);
+  if(!clean) return '';
+
+  // V128:
+  // Taiwan / Korea ใช้ Google Finance; Singapore V149 ใช้ Yahoo STI (^STI)
+  // และใช้ URL canonical เพื่อลด layout เปลี่ยนเพราะ query tracking
+  if(
+    key==='taiwan' ||
+    key==='korea' ||
+    key==='singapore'
+  ){
+    clean=googleFinanceStableUrlV128(key,clean);
+  }
+
+  const bucket=Math.floor(Date.now()/300000);
+
+  // Google Finance รอ render นานกว่าหน้าอื่นเล็กน้อย
+  const waitSeconds=
+    (
+      key==='taiwan' ||
+      key==='korea' ||
+      key==='singapore'
+    )
+      ? 8
+      : 5;
+
+  return (
+    'https://image.thum.io/get/noanimate/png/maxAge/0/wait/' +
+    waitSeconds +
+    '/width/1200/crop/1200/' +
+    '?url=' + encodeURIComponent(clean) +
+    '&_livehuay=' + bucket
+  );
+}
+
+function customCardHtml(x){
+  return `
+    <div class="market-live-v129" id="market-live-${x.key}">
+      <div class="market-source-v129" id="market-title-${x.key}">
+        ${x.name}
+      </div>
+
+      <div class="market-price-v129" id="market-current-${x.key}">
+        --
+      </div>
+
+      <div class="market-move-v129" id="market-move-${x.key}">
+        <span id="market-change-${x.key}">--</span>
+        <span id="market-percent-${x.key}">--</span>
+      </div>
+
+      <div class="market-bottom-v129">
+        <span id="market-updated-${x.key}">--</span>
+        <span>
+          Prev.Close
+          <b id="market-prev-${x.key}">--</b>
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+function escapeAttrV142(value){
+  return String(value==null?'':value)
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
+
+function youtubeInfoV142(rawUrl){
+  const raw=String(rawUrl||'').trim();
+  if(!raw) return null;
+
+  let u;
+  try{
+    u=new URL(raw,location.href);
+  }catch(e){
+    return null;
+  }
+
+  const host=u.hostname.toLowerCase().replace(/^www\./,'');
+  const isYoutube=
+    host==='youtube.com' ||
+    host==='m.youtube.com' ||
+    host==='music.youtube.com' ||
+    host==='youtu.be' ||
+    host==='youtube-nocookie.com';
+
+  if(!isYoutube) return null;
+
+  let video='';
+  let list=String(u.searchParams.get('list')||'').trim();
+
+  if(host==='youtu.be'){
+    video=u.pathname.split('/').filter(Boolean)[0]||'';
+  }else{
+    const parts=u.pathname.split('/').filter(Boolean);
+    if(parts[0]==='watch') video=String(u.searchParams.get('v')||'').trim();
+    else if(['embed','shorts','live'].includes(parts[0])) video=parts[1]||'';
+    else if(parts[0]==='playlist') video='';
+  }
+
+  video=video.replace(/[^A-Za-z0-9_-]/g,'');
+  list=list.replace(/[^A-Za-z0-9_-]/g,'');
+
+  if(!video && !list) return null;
+  return {video,list};
+}
+
+function isYouTubeUrlV142(rawUrl){
+  return !!youtubeInfoV142(rawUrl);
+}
+
+function iframeEmbedUrlV142(rawUrl, autoplay){
+  const raw=String(rawUrl||'').trim();
+  const y=youtubeInfoV142(raw);
+  if(!y) return raw;
+
+  const params=new URLSearchParams();
+  params.set('playsinline','1');
+  params.set('rel','0');
+  params.set('enablejsapi','1');
+  params.set('fs','0');
+
+  // V144: เล่นซ้ำอัตโนมัติเมื่อ YouTube จบคลิป
+  params.set('loop','1');
+
+  if(autoplay) params.set('autoplay','1');
+
+  if(y.video){
+    // YouTube ต้องมี playlist=<video id> สำหรับวิดีโอเดี่ยวจึงจะ loop ได้
+    params.set('playlist', y.list || y.video);
+    if(y.list) params.set('list',y.list);
+    return 'https://www.youtube.com/embed/'+encodeURIComponent(y.video)+'?'+params.toString();
+  }
+
+  // playlist-only URL: loop ทั้ง playlist
+  if(y.list) params.set('list',y.list);
+  return 'https://www.youtube.com/embed/videoseries?'+params.toString();
+}
+
+function iframeSourceControlsV142(x){
+  if(x.mode!=='iframe') return '';
+  const url=state[x.key]?.url || x.url || '';
+  return `
+    <div class="iframe-source-v142">
+      <label>🌐 URL iframe / YouTube</label>
+      <input id="iframe-url-${x.key}" type="url" value="${escapeAttrV142(url)}" placeholder="https://www.youtube.com/watch?v=... หรือ https://...">
+      <div class="iframe-source-actions-v142">
+        <button type="button" onclick="applyIframeSourceV142('${x.key}')">ใช้ในกรอบนี้</button>
+        <button type="button" onclick="openFloatingForKeyV142('${x.key}')">🎵 เปิดลอย</button>
+      </div>
+    </div>`;
+}
+
+function frameHtml(x){
+  if(x.mode === 'custom'){
+    return `<div id="frame-${x.key}" class="frame-custom">${customCardHtml(x)}</div>`;
+  }
+
+  if(x.mode === 'shot'){
+    const shotUrl=
+      x.stockPreview
+        ? stockPreviewUrlV121(x.key,x.url)
+        : screenshotUrl(x.url, x.key === 'hsi_vip');
+
+    return `<img
+      id="frame-${x.key}"
+      class="frame-shot ${x.stockPreview ? 'stock-preview-stable-v123 stock-preview-stable-v126' : ''} ${x.googleFinanceStable ? 'google-finance-stable-v128' : ''}"
+      src="${shotUrl}"
+      alt="${x.name}"
+      referrerpolicy="no-referrer"
+      onload="${x.stockPreview ? `STOCK_PREVIEW_LAST_V126['${x.key}']=this.currentSrc||this.src` : ''}"
+    >`;
+  }
+
+  const rawFrameUrl=(x.facebookVideoEmbed===true)
+    ? facebookLiveEmbedUrlV101(x.url)
+    : x.url;
+  const isYoutube=isYouTubeUrlV142(rawFrameUrl);
+  return `<iframe
+    id="frame-${x.key}"
+    class="${isYoutube?'youtube-frame-v142':''}"
+    src="${escapeAttrV142(iframeEmbedUrlV142(rawFrameUrl,false))}"
+    loading="${x.key==='hanoi_normal'?'eager':'lazy'}"
+    allow="autoplay; encrypted-media; picture-in-picture; web-share"
+    referrerpolicy="no-referrer-when-downgrade"
+  ></iframe>`;
+}
+
+function flagIconHtml(x){
+  const map = {
+    '🇱🇦':'https://cdn-icons-png.flaticon.com/512/197/197568.png',
+    '🇯🇵':'https://cdn-icons-png.flaticon.com/512/197/197604.png',
+    '🇨🇳':'https://cdn-icons-png.flaticon.com/512/197/197375.png',
+    '🇭🇰':'https://cdn-icons-png.flaticon.com/512/203/203036.png',
+    '🇻🇳':'https://cdn-icons-png.flaticon.com/512/202/202939.png',
+    '🇹🇼':'https://cdn-icons-png.flaticon.com/512/197/197557.png',
+    '🇰🇷':'https://cdn-icons-png.flaticon.com/512/203/203048.png',
+    '🇸🇬':'https://cdn-icons-png.flaticon.com/512/197/197496.png',
+    '🇬🇧':'https://cdn-icons-png.flaticon.com/512/197/197374.png',
+    '🇩🇪':'https://cdn-icons-png.flaticon.com/512/197/197571.png',
+    '🇺🇸':'https://cdn-icons-png.flaticon.com/512/323/323310.png',
+  };
+  const src = map[x.flag || ''];
+  if(src){
+    return `<div class="flag"><img src="${src}" alt="${x.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.innerHTML='<span class=&quot;flag-fallback&quot;>${x.flag || ''}</span>'"></div>`;
+  }
+  return `<div class="flag"><span class="flag-fallback">${x.flag || ''}</span></div>`;
+}
+
+
+const STOCK_CLOSE_KEYS = [
+  'nikkei',
+  'hsi',
+  'china',
+  'taiwan',
+  'nikkei_pm',
+  'korea',
+  'china_pm',
+  'hsi_pm',
+  'singapore'
+];
+
+const STOCK_CLOSED_STATE = {};
+
+function isStockCloseCard(key){
+  return STOCK_CLOSE_KEYS.indexOf(key) >= 0;
+}
+
+function stockCloseButtonHtml(x){
+  if(!isStockCloseCard(x.key)) return '';
+
+  return `
+    <div class="stock-close-row">
+      <button
+        type="button"
+        class="stock-close-btn"
+        onclick="event.stopPropagation();setStockClosed('${x.key}',true)"
+      >ปิดการ์ด</button>
+    </div>
+  `;
+}
+
+function stockClosedCoverHtml(x){
+  if(!isStockCloseCard(x.key)) return '';
+
+  return `
+    <div
+      class="stock-closed-cover"
+      onclick="setStockClosed('${x.key}',false)"
+      title="กดเพื่อเปิด"
+    >
+      <div class="stock-closed-text">ตลาดปิด</div>
+    </div>
+  `;
+}
+
+function setStockClosed(key, closed){
+  if(!isStockCloseCard(key)) return;
+
+  STOCK_CLOSED_STATE[key] = !!closed;
+
+  const el = document.getElementById('card-' + key);
+  if(el){
+    el.classList.toggle(
+      'stock-is-closed',
+      !!closed
+    );
+  }
+}
+
+function applyStockClosedState(){
+  STOCK_CLOSE_KEYS.forEach(function(key){
+    const el = document.getElementById('card-' + key);
+    if(el){
+      el.classList.toggle(
+        'stock-is-closed',
+        !!STOCK_CLOSED_STATE[key]
+      );
+    }
+  });
+}
+
+
+function facebookLiveEmbedUrlV101(url){
+  const liveUrl=String(url||'').trim();
+  if(!liveUrl) return '';
+
+  // V142: ช่อง LIVE เดิมรองรับ YouTube ด้วย โดยไม่กระทบ Facebook เดิม
+  if(isYouTubeUrlV142(liveUrl)){
+    return iframeEmbedUrlV142(liveUrl,true);
+  }
+
+  return (
+    'https://www.facebook.com/plugins/video.php?' +
+    'href=' + encodeURIComponent(liveUrl) +
+    '&show_text=false' +
+    '&autoplay=true' +
+    '&width=760'
+  );
+}
+
+function liveOnlyCardV101(x){
+  const c=state[x.key]||x;
+  const liveUrl=String(c.liveUrl||x.liveUrl||'').trim();
+  const embed=facebookLiveEmbedUrlV101(liveUrl);
+  const hideViewers=c.hideViewers!==false && !isYouTubeUrlV142(liveUrl);
+
+  return `
+    <article class="card live-only-card" id="card-${x.key}">
+      <div class="head">
+        ${flagIconHtml(x)}
+        <div>
+          ${
+            x.url
+              ? `<a class="name name-link" href="${x.url}" target="_blank" rel="noopener noreferrer" title="เปิดเว็บดูผล">${x.name}</a>`
+              : `<div class="name">${x.name}</div>`
+          }
+          <div class="time">🔴 LIVE ถ่ายทอดสด</div>
+        </div>
+      </div>
+
+      <div class="lao-live-result-grid">
+        <div class="live-facebook-viewer">
+          <iframe
+            id="live-frame-${x.key}"
+            data-live-url="${liveUrl.replace(/"/g,'&quot;')}"
+            src="${embed}"
+            scrolling="no"
+            frameborder="0"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            allowfullscreen="true">
+          </iframe>
+
+          <div
+            class="live-viewer-mask"
+            id="live-mask-${x.key}"
+            style="${hideViewers?'':'display:none'}">
+            <span class="live-label">สด</span>
+            <span class="viewer-hidden-text">LIVE</span>
+          </div>
+        </div>
+
+        <section class="lao-result-panel" aria-label="ผลหวยลาวพัฒนา">
+          <div class="lao-result-main">
+            <div class="lao-result-label">ผล 4 ตัว</div>
+            <div class="result lao-result-four" id="result-${x.key}-four">-</div>
+          </div>
+
+          <div class="lao-result-pair">
+            <div class="lao-result-cell">
+              <div class="lao-result-label">ผล 3 ตัวบน</div>
+              <div class="result lao-result-small" id="result-${x.key}-top">-</div>
+            </div>
+
+            <div class="lao-result-cell">
+              <div class="lao-result-label">ผล 2 ตัวล่าง</div>
+              <div class="result lao-result-small" id="result-${x.key}-bottom">-</div>
+            </div>
+          </div>
+
+          <div class="market-live-note lao-result-note" id="market-note-${x.key}">รอผล</div>
+        </section>
+      </div>
+
+      <div class="live-only-actions">
+        <a
+          class="live-open-btn"
+          id="live-source-${x.key}"
+          href="${liveUrl}"
+          target="_blank"
+          rel="noopener noreferrer">
+          ▶ เปิด LIVE
+        </a>
+      </div>
+
+      <div class="adjust" id="adj-${x.key}">
+        <small id="info-${x.key}">
+          ลิงก์ LIVE เปลี่ยนได้จากหลังบ้าน
+        </small>
+      </div>
+    </article>
+  `;
+}
+
+function applyLiveEmbedV101(key){
+  const c=state[key];
+  if(!c || c.mode!=='facebook-live') return;
+
+  const liveUrl=String(c.liveUrl||'').trim();
+  const frame=document.getElementById('live-frame-'+key);
+  const source=document.getElementById('live-source-'+key);
+  const mask=document.getElementById('live-mask-'+key);
+
+  if(frame){
+    const previous=String(frame.dataset.liveUrl||'');
+    if(previous!==liveUrl){
+      frame.dataset.liveUrl=liveUrl;
+      frame.src=facebookLiveEmbedUrlV101(liveUrl);
+    }
+  }
+
+  if(source){
+    source.href=liveUrl||'#';
+  }
+
+  if(mask){
+    mask.style.display=(c.hideViewers===false || isYouTubeUrlV142(liveUrl))?'none':'flex';
+  }
+}
+
+
+function card(x){
+  if(x.mode==='facebook-live'){
+    return liveOnlyCardV101(x);
+  }
+
+  const forcedContent = frameHtml(x);
+
+  return `
+    <article class="card" id="card-${x.key}">
+      <div class="head">
+        ${flagIconHtml(x)}
+        <div>
+          ${
+            x.url
+              ? `<a id="source-name-${x.key}" class="name name-link" href="${x.url}" target="_blank" rel="noopener noreferrer" title="เปิดเว็บดูผล">${x.name}</a>`
+              : `<div class="name">${x.name}</div>`
+          }
+          <div class="time">${x.close ? `ปิดรับ ${x.close} น. • ` : ''}ออกผล ${x.draw} น.</div>
+        </div>
+      </div>
+
+      <div class="viewer">
+        ${forcedContent}
+        <div class="overlay-layer" id="overlay-${x.key}">
+          ${x.boxes.map((b,i) => boxHtml(x.key, b, i)).join('')}
+        </div>
+      </div>
+
+      <div class="results"><div class="result" id="result-${x.key}-top">-</div><div class="result" id="result-${x.key}-bottom">-</div></div>
+      ${stockCloseButtonHtml(x)}
+
+      <div class="adjust" id="adj-${x.key}">
+        <div class="adjust-group">
+          <div class="adjust-title">⚙️ iframe</div>
+          ${iframeSourceControlsV142(x)}
+          <div class="adjust-row">
+            <button onclick="moveFrame('${x.key}',0,-15)">↑</button>
+            <button onclick="moveFrame('${x.key}',-15,0)">←</button>
+            <button onclick="moveFrame('${x.key}',15,0)">→</button>
+            <button onclick="moveFrame('${x.key}',0,15)">↓</button>
+            <button onclick="zoomFrame('${x.key}',.05)">＋</button>
+          </div>
+          <div class="adjust-row" style="margin-top:4px">
+            <button onclick="zoomFrame('${x.key}',-.05)">－</button>
+            <button onclick="saveCfg('${x.key}')">บันทึก</button>
+            <button onclick="resetCfg('${x.key}')">รีเซ็ต</button>
+            <button onclick="moveFrame('${x.key}',0,-50)">↑↑</button>
+            <button onclick="moveFrame('${x.key}',0,50)">↓↓</button>
+          </div>
+          <div class="adjust-row" style="margin-top:4px">
+            <button onclick="zoomFrame('${x.key}',.15)">Zoom +</button>
+            <button onclick="zoomFrame('${x.key}',-.15)">Zoom -</button>
+            <button onclick="setZoom('${x.key}',1)">x1</button>
+            <button onclick="setZoom('${x.key}',1.5)">x1.5</button>
+            <button onclick="setZoom('${x.key}',2)">x2</button>
+          </div>
+          <div class="adjust-row" style="margin-top:4px">
+            <button onclick="moveFrame('${x.key}',0,-150)">↑ 150</button>
+            <button onclick="moveFrame('${x.key}',0,150)">↓ 150</button>
+            <button onclick="moveFrame('${x.key}',0,-400)">↑ 400</button>
+            <button onclick="moveFrame('${x.key}',0,400)">↓ 400</button>
+            <button onclick="moveFrame('${x.key}',0,800)">↓ 800</button>
+          </div>
+        </div>
+
+        ${groupControls(x.key,'แดง',0)}
+        ${groupControls(x.key,'น้ำเงิน',1)}
+
+        <small id="info-${x.key}"></small>
+      </div>
+
+      ${stockClosedCoverHtml(x)}
+    </article>`;
+}
+
+function renderBoard(){
+  const boardEl=document.getElementById('board');
+  boardEl.classList.toggle('live-single-board',currentBoard==='lao-development');
+  boardEl.innerHTML = ITEMS.map(card).join('');
+
+  ITEMS.forEach(function(item){
+    if(item.url === 'https://stocks-vip.com/' && item.mode === 'iframe'){
+      const frame = document.getElementById('frame-' + item.key);
+      if(frame){
+        frame.classList.add('frame-live-long');
+        frame.setAttribute('scrolling','yes');
+      }
+    }
+  });
+
+  applyStockClosedState();
+}
+
+function applyFrame(key){
+  const c = state[key], f = document.getElementById('frame-' + key);
+  if(!f) return;
+
+  if(c.mode==='custom'){
+    f.style.width='100%';
+    f.style.height='100%';
+    f.style.left='0';
+    f.style.top='0';
+    f.style.transform='none';
+
+    const sourceName=document.getElementById('source-name-'+key);
+    if(sourceName && c.url){
+      sourceName.href=c.url;
+    }
+
+    return;
+  }
+
+  if(
+    f.tagName === 'IFRAME' &&
+    c.url
+  ){
+    const rawFrameUrl=(c.facebookVideoEmbed===true)
+      ? facebookLiveEmbedUrlV101(c.url)
+      : c.url;
+    const embedUrl=iframeEmbedUrlV142(rawFrameUrl,false);
+    const isYoutube=isYouTubeUrlV142(rawFrameUrl);
+
+    f.classList.toggle('youtube-frame-v142',isYoutube);
+
+    if(f.getAttribute('src')!==embedUrl){
+      f.setAttribute('src',embedUrl);
+    }
+
+    const urlInput=document.getElementById('iframe-url-'+key);
+    if(urlInput && urlInput.value!==c.url){
+      urlInput.value=c.url;
+    }
+
+    if(isYoutube){
+      f.style.width='100%';
+      f.style.height='100%';
+      f.style.left='0';
+      f.style.top='0';
+      f.style.transform='none';
+
+      const sourceName=document.getElementById('source-name-'+key);
+      if(sourceName) sourceName.href=c.url;
+      return;
+    }
+  }
+
+  if(
+    f.tagName === 'IMG' &&
+    c.stockPreview===true &&
+    c.url
+  ){
+    const previewUrl=stockPreviewUrlV121(key,c.url);
+
+    // ถ้ามีภาพอยู่แล้ว อย่าเปลี่ยน src ทันที
+    // ให้ preload ก่อนแล้วค่อยสลับ เพื่อไม่ให้ผู้ชมเห็นสถานะโหลด
+    if(
+      !f.getAttribute('src') ||
+      f.getAttribute('src')===''
+    ){
+      f.setAttribute('src',previewUrl);
+    }else if(
+      f.getAttribute('src')!==previewUrl
+    ){
+      refreshOneStockPreviewV126(key);
+    }
+  }
+
+  const sourceName=document.getElementById('source-name-'+key);
+  if(sourceName && c.url){
+    sourceName.href=c.url;
+  }
+
+  f.style.width = c.w + 'px';
+  f.style.left = c.left + 'px';
+  f.style.top = c.top + 'px';
+  f.style.transform = 'scale(' + c.scale + ')';
+
+  if(f.tagName === 'IFRAME'){
+    f.style.height = c.h + 'px';
+  }else if(f.classList.contains('frame-custom')){
+    f.style.height = c.h + 'px';
+  }else if(
+    f.tagName === 'IMG' &&
+    c.stockPreview===true
+  ){
+    // Screenshot service คืน 1200x1200 คงที่
+    // ล็อกไว้เพื่อไม่ให้กล่องแดง/เขียวเลื่อนตอน refresh
+    f.style.height = '1200px';
+  }else{
+    f.style.height = 'auto';
+  }
+}
+function applyBoxes(key){
+  const c = state[key];
+  c.boxes.forEach((b,i) => {
+    const el = document.getElementById('box-' + key + '-' + i);
+    if(!el) return;
+    el.style.left = b.x + 'px';
+    el.style.top = b.y + 'px';
+    el.style.width = Math.max(0,b.w) + 'px';
+    el.style.height = Math.max(0,b.h) + 'px';
+    el.style.display = (boxesVisible && b.w > 0 && b.h > 0) ? 'block' : 'none';
+  });
+}
+function applyInfo(key){
+  const c = state[key];
+  const red = c.boxes[0] || {x:0,y:0,w:0,h:0};
+  const blue = c.boxes[1] || {x:0,y:0,w:0,h:0};
+  const info = document.getElementById('info-' + key);
+  if(!info) return;
+  info.textContent =
+    `iframe left ${Math.round(c.left)} / top ${Math.round(c.top)} / zoom ${c.scale.toFixed(3)} | ` +
+    `แดง x:${Math.round(red.x)} y:${Math.round(red.y)} w:${Math.round(red.w)} h:${Math.round(red.h)} | ` +
+    `เขียว x:${Math.round(blue.x)} y:${Math.round(blue.y)} w:${Math.round(blue.w)} h:${Math.round(blue.h)}`;
+}
+function applyAll(key){
+  if(state[key] && state[key].mode==='facebook-live'){
+    applyLiveEmbedV101(key);
+    return;
+  }
+
+  applyFrame(key);
+  applyBoxes(key);
+  applyInfo(key);
+}
+
+
+
+function applyIframeSourceV142(key){
+  const c=state[key];
+  const input=document.getElementById('iframe-url-'+key);
+  if(!c || c.mode!=='iframe' || !input) return;
+
+  const url=String(input.value||'').trim();
+  if(!/^https?:\/\//i.test(url)){
+    showSaveStatus('URL ต้องขึ้นต้นด้วย http:// หรือ https://',false);
+    return;
+  }
+
+  c.url=url;
+  applyAll(key);
+  showSaveStatus(isYouTubeUrlV142(url)?'เปลี่ยนกรอบเป็น YouTube แล้ว':'เปลี่ยน URL iframe แล้ว',true);
+}
+
+function openFloatingForKeyV142(key){
+  const input=document.getElementById('iframe-url-'+key);
+  const c=state[key];
+  const url=String(input?.value || c?.url || '').trim();
+  showMediaDockV142(url,key);
+}
+
+function showMediaDockV142(url,key){
+  const dock=document.getElementById('mediaDockV142');
+  const input=document.getElementById('mediaDockUrlV142');
+  if(!dock || !input) return;
+
+  dock.classList.remove('hidden');
+  if(dock.classList.contains('minimized')){
+    dock.classList.remove('minimized');
+    const minBtn=document.getElementById('mediaDockMinBtnV142');
+    if(minBtn) minBtn.textContent='−';
+  }
+
+  const remembered=localStorage.getItem('livehuay_media_url_v142')||'';
+  const next=String(url||remembered||input.value||'').trim();
+  if(next) input.value=next;
+
+  if(key){
+    const item=ITEMS.find(function(x){return x.key===key;});
+    const title=document.getElementById('mediaDockTitleV142');
+    if(title) title.textContent='🎵 '+(item?.name||'iframe')+' • หน้าต่างลอย';
+  }
+
+  if(url) loadMediaDockUrlV142(url);
+  clampMediaDockV142();
+}
+
+function loadMediaDockUrlV142(forceUrl){
+  const input=document.getElementById('mediaDockUrlV142');
+  const frame=document.getElementById('mediaDockFrameV142');
+  const dock=document.getElementById('mediaDockV142');
+  if(!input || !frame || !dock) return;
+
+  const url=String(forceUrl||input.value||'').trim();
+  if(!/^https?:\/\//i.test(url)){
+    showSaveStatus('วางลิงก์ YouTube หรือ URL ที่ขึ้นต้นด้วย http:// / https://',false);
+    return;
+  }
+
+  input.value=url;
+  localStorage.setItem('livehuay_media_url_v142',url);
+  dock.classList.remove('hidden');
+  frame.src=iframeEmbedUrlV142(url,true);
+
+  const title=document.getElementById('mediaDockTitleV142');
+  if(title && !title.textContent.includes('•')){
+    title.textContent=isYouTubeUrlV142(url)?'🎵 YouTube • หน้าต่างลอย':'🌐 iframe • หน้าต่างลอย';
+  }
+
+  showSaveStatus(isYouTubeUrlV142(url)?'เปิด YouTube ในหน้าต่างลอยแล้ว':'เปิด iframe ในหน้าต่างลอยแล้ว',true);
+}
+
+function toggleMediaDockMinV142(){
+  const dock=document.getElementById('mediaDockV142');
+  const btn=document.getElementById('mediaDockMinBtnV142');
+  if(!dock) return;
+  const willMin=!dock.classList.contains('minimized');
+  dock.classList.toggle('minimized',willMin);
+  if(btn) btn.textContent=willMin?'□':'−';
+  clampMediaDockV142();
+}
+
+function setMediaDockSizeV142(size){
+  const dock=document.getElementById('mediaDockV142');
+  if(!dock) return;
+  dock.classList.remove('size-small','size-medium','size-large','minimized');
+  dock.classList.add('size-'+(size||'medium'));
+  const btn=document.getElementById('mediaDockMinBtnV142');
+  if(btn) btn.textContent='−';
+  localStorage.setItem('livehuay_media_size_v142',size||'medium');
+  setTimeout(clampMediaDockV142,0);
+}
+
+function closeMediaDockV142(){
+  const dock=document.getElementById('mediaDockV142');
+  const frame=document.getElementById('mediaDockFrameV142');
+  if(frame) frame.src='about:blank';
+  if(dock){
+    dock.classList.add('hidden');
+    dock.classList.remove('minimized');
+    dock.style.left='';
+    dock.style.top='';
+    dock.style.right='12px';
+    dock.style.bottom='12px';
+  }
+  const btn=document.getElementById('mediaDockMinBtnV142');
+  if(btn) btn.textContent='−';
+}
+
+function clampMediaDockV142(){
+  const dock=document.getElementById('mediaDockV142');
+  if(!dock || dock.classList.contains('hidden')) return;
+  if(!dock.style.left || !dock.style.top) return;
+
+  const rect=dock.getBoundingClientRect();
+  const maxLeft=Math.max(0,window.innerWidth-rect.width);
+  const maxTop=Math.max(0,window.innerHeight-rect.height);
+  const left=Math.max(0,Math.min(maxLeft,parseFloat(dock.style.left)||0));
+  const top=Math.max(0,Math.min(maxTop,parseFloat(dock.style.top)||0));
+  dock.style.left=left+'px';
+  dock.style.top=top+'px';
+}
+
+(function initMediaDockV142(){
+  let drag=null;
+
+  document.addEventListener('pointerdown',function(ev){
+    const head=ev.target.closest && ev.target.closest('#mediaDockHeadV142');
+    if(!head) return;
+    if(ev.target.closest('button')) return;
+
+    const dock=document.getElementById('mediaDockV142');
+    if(!dock || dock.classList.contains('hidden')) return;
+
+    const rect=dock.getBoundingClientRect();
+    dock.style.left=rect.left+'px';
+    dock.style.top=rect.top+'px';
+    dock.style.right='auto';
+    dock.style.bottom='auto';
+
+    drag={
+      pointerId:ev.pointerId,
+      dx:ev.clientX-rect.left,
+      dy:ev.clientY-rect.top
+    };
+
+    try{head.setPointerCapture(ev.pointerId)}catch(e){}
+    ev.preventDefault();
+  });
+
+  document.addEventListener('pointermove',function(ev){
+    if(!drag || ev.pointerId!==drag.pointerId) return;
+    const dock=document.getElementById('mediaDockV142');
+    if(!dock) return;
+
+    const rect=dock.getBoundingClientRect();
+    const maxLeft=Math.max(0,window.innerWidth-rect.width);
+    const maxTop=Math.max(0,window.innerHeight-rect.height);
+    const left=Math.max(0,Math.min(maxLeft,ev.clientX-drag.dx));
+    const top=Math.max(0,Math.min(maxTop,ev.clientY-drag.dy));
+    dock.style.left=left+'px';
+    dock.style.top=top+'px';
+    ev.preventDefault();
+  },{passive:false});
+
+  function endDrag(ev){
+    if(!drag || ev.pointerId!==drag.pointerId) return;
+    drag=null;
+  }
+
+  document.addEventListener('pointerup',endDrag);
+  document.addEventListener('pointercancel',endDrag);
+  window.addEventListener('resize',clampMediaDockV142);
+  window.addEventListener('orientationchange',function(){setTimeout(clampMediaDockV142,100)});
+
+  document.addEventListener('DOMContentLoaded',function(){
+    const urlInput=document.getElementById('mediaDockUrlV142');
+    if(urlInput){
+      urlInput.addEventListener('keydown',function(ev){
+        if(ev.key==='Enter'){
+          ev.preventDefault();
+          loadMediaDockUrlV142();
+        }
+      });
+    }
+
+    const size=localStorage.getItem('livehuay_media_size_v142');
+    if(['small','medium','large'].includes(size||'')){
+      const dock=document.getElementById('mediaDockV142');
+      if(dock){
+        dock.classList.remove('size-small','size-medium','size-large');
+        dock.classList.add('size-'+size);
+      }
+    }
+
+    const remembered=localStorage.getItem('livehuay_media_url_v142');
+    const input=document.getElementById('mediaDockUrlV142');
+    if(input && remembered) input.value=remembered;
+  });
+})();
+
+function moveFrame(key, dx, dy){ state[key].left += dx; state[key].top += dy; applyAll(key); }
+function zoomFrame(key, d){ state[key].scale = Math.max(.05, Math.min(3.0, state[key].scale + d)); applyAll(key); }
+
+function setZoom(key, scale){
+  state[key].scale = Math.max(.05, Math.min(3.0, scale));
+  applyAll(key);
+}
+
+function moveBox(key, idx, dx, dy){
+  const box = state[key].boxes[idx];
+  if(!box) return;
+  box.x += dx; box.y += dy; applyAll(key);
+}
+function resizeBox(key, idx, dw, dh){
+  const box = state[key].boxes[idx];
+  if(!box) return;
+  box.w = Math.max(0, box.w + dw);
+  box.h = Math.max(0, box.h + dh);
+  applyAll(key);
+}
+function toggleSingleBox(key, idx){
+  const box = state[key].boxes[idx];
+  if(!box) return;
+  if(box.w > 0 && box.h > 0){
+    box._last = {w:box.w, h:box.h};
+    box.w = 0; box.h = 0;
+  }else{
+    box.w = box._last?.w || 40;
+    box.h = box._last?.h || 30;
+  }
+  applyAll(key);
+}
+function copyBox(key, idx){
+  const box = state[key].boxes[idx];
+  const txt = `x:${box.x}, y:${box.y}, w:${box.w}, h:${box.h}`;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).catch(()=>{});
+  }
+}
+function saveCfg(key){
+  const c=state[key];
+  const payload={left:c.left,top:c.top,scale:c.scale,w:c.w,h:c.h,boxes:deepCopy(c.boxes),_layoutVersion:c.layoutVersion||1};
+  if(c.mode==='iframe' && c.url){ payload.url=c.url; }
+  showSaveStatus('กำลังบันทึก...',true);
+  fetch('/api/settings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key,payload})})
+    .then(r=>r.json()).then(()=>showSaveStatus('บันทึกแล้ว • ใช้ค่าเดียวกันทุกเครื่อง',true))
+    .catch(function(err){showSaveStatus('บันทึกไม่สำเร็จ',false);console.error(err);});
+}
+
+function resetCfg(key){
+  const original=ITEMS.find(x=>x.key===key); state[key]=deepCopy(original); applyAll(key);
+  fetch('/api/settings',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({key})})
+    .then(r=>r.json()).then(()=>showSaveStatus('รีเซ็ตและบันทึกค่าเริ่มต้นแล้ว',true))
+    .catch(function(err){showSaveStatus('รีเซ็ตบน Netlify ไม่สำเร็จ',false);console.error(err);});
+}
+function jumpStocksVip(y){
+  if(!state.hsi_vip) return;
+  state.hsi_vip.top = y;
+  applyAll('hsi_vip');
+}
+
+
+function closeTopMenu(){
+  const menu = document.getElementById('topMenu');
+  const btn = document.getElementById('menuToggle');
+  if(menu) menu.classList.remove('show');
+  if(btn) btn.classList.remove('active');
+}
+
+function toggleTopMenu(){
+  const menu = document.getElementById('topMenu');
+  const btn = document.getElementById('menuToggle');
+  if(!menu || !btn) return;
+
+  const show = !menu.classList.contains('show');
+  menu.classList.toggle('show', show);
+  btn.classList.toggle('active', show);
+}
+
+document.addEventListener('click', function(e){
+  const wrap = document.querySelector('.top-menu-wrap');
+  const menu = document.getElementById('topMenu');
+  const btn = document.getElementById('menuToggle');
+
+  if(!wrap || !menu || !btn) return;
+  if(wrap.contains(e.target)) return;
+
+  menu.classList.remove('show');
+  btn.classList.remove('active');
+});
+
+function toggleAdjust(){
+  const els = document.querySelectorAll('.adjust');
+  const showing = [...els].some(x => x.classList.contains('show'));
+  els.forEach(x => x.classList.toggle('show', !showing));
+  document.getElementById('adjustToggle').classList.toggle('active', !showing);
+}
+function toggleBoxes(){
+  boxesVisible = !boxesVisible;
+  Object.keys(state).forEach(applyBoxes);
+  document.getElementById('boxToggle').classList.toggle('active', boxesVisible);
+}
+
+
+function retryVipShot(){
+  const el = document.getElementById('frame-hsi_vip');
+  if(!el || el.tagName !== 'IMG') return;
+
+  const target =
+    'https://stocks-vip.com/?_boardts=' + Date.now();
+
+  el.src = screenshotUrl(target, true);
+}
+
+function refreshSnapshots(){
+  ITEMS.forEach(function(item){
+    if(item.mode !== 'shot') return;
+
+    const el = document.getElementById('frame-' + item.key);
+    if(!el || el.tagName !== 'IMG') return;
+
+    // เพิ่ม query ที่ URL ปลายทางเพื่อบังคับสร้างภาพใหม่
+    const target = item.url + (item.url.indexOf('?') >= 0 ? '&' : '?') + '_boardts=' + Date.now();
+    el.src = screenshotUrl(target, item.key === 'hsi_vip');
+  });
+
+  showSaveStatus('กำลังรีเฟรชภาพเว็บที่บล็อก iframe...', true);
+}
+
+
+const MORNING_AUTO_MARKET_KEYS = ['lao_extra','lao_tv','hanoi_asean','hanoi_hd'];
+const MORNING_MANUAL_STOCK_KEYS = ['nikkei','china','hsi'];
+const MORNING_AUTO_VIP_KEYS = ['nikkei_vip','china_vip','hsi_vip'];
+
+const AFTERNOON_AUTO_MARKET_KEYS = ['hanoi_star','lao_hd','hanoi_tv'];
+const AFTERNOON_MANUAL_STOCK_KEYS = ['taiwan','nikkei_pm','korea','china_pm'];
+const AFTERNOON_AUTO_VIP_KEYS = ['korea_vip','nikkei_pm_vip','china_pm_vip'];
+
+const EVENING_AUTO_MARKET_KEYS = [
+  'lao_star',
+  'hanoi_redcross'
+];
+const EVENING_MANUAL_STOCK_KEYS = ['hsi_pm','singapore'];
+const EVENING_AUTO_VIP_KEYS = ['hsi_pm_vip','singapore_vip'];
+
+const HANOI_AUTO_MARKET_KEYS = [
+  'hanoi_union',
+  'hanoi_special',
+  'hanoi_normal',
+  'hanoi_vip',
+  'hanoi_development'
+];
+const HANOI_MANUAL_STOCK_KEYS = [];
+const HANOI_AUTO_VIP_KEYS = [];
+
+const NIGHT_AUTO_MARKET_KEYS = [
+  'lao_development_night',
+  'lao_union',
+  'lao_asean',
+  'lao_union_vip',
+  'lao_vip',
+  'lao_star_vip',
+  'hanoi_extra',
+  'lao_redcross',
+  'dowjones_vip',
+  'dowjones_star'
+];
+const NIGHT_AUTO_VIP_KEYS = [];
+const NIGHT_MANUAL_STOCK_KEYS = [];
+
+const LAO_DEVELOPMENT_AUTO_MARKET_KEYS = [];
+const LAO_DEVELOPMENT_AUTO_VIP_KEYS = [];
+const LAO_DEVELOPMENT_MANUAL_STOCK_KEYS = [];
+
+const TEST_AUTO_MARKET_KEYS = ['lao_patuxay','lao_santipap'];
+const TEST_AUTO_VIP_KEYS = [];
+const TEST_MANUAL_STOCK_KEYS = [];
+
+let AUTO_MARKET_KEYS = MORNING_AUTO_MARKET_KEYS;
+let MANUAL_STOCK_KEYS = MORNING_MANUAL_STOCK_KEYS;
+let AUTO_VIP_KEYS = MORNING_AUTO_VIP_KEYS;
+// VIP Auto: JP/CN/HK ดึงจาก API ตรงใน Code.gs
+
+function formatMarketNumber(v){
+  const n = Number(v);
+  if(!Number.isFinite(n)) return '--';
+
+  return n.toLocaleString('en-US',{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+function formatSigned(v){
+  const n = Number(v);
+  if(!Number.isFinite(n)) return '--';
+
+  return (n >= 0 ? '+' : '') +
+    n.toLocaleString('en-US',{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    });
+}
+
+function marketElement(id){
+  return document.getElementById(id);
+}
+
+function ensureMarketNote(key){
+  const frame = marketElement('frame-' + key);
+  if(!frame || !frame.parentElement) return null;
+
+  let note = marketElement('market-note-' + key);
+
+  if(!note){
+    note = document.createElement('div');
+    note.id = 'market-note-' + key;
+    note.className = 'market-live-note';
+    note.textContent = 'AUTO';
+    frame.parentElement.appendChild(note);
+  }
+
+  if(isVipResultKey(key)){
+    note.style.display = vipNoteVisible ? '' : 'none';
+  }else if(isAutoResultKey(key)){
+    note.style.display = autoNoteVisible ? '' : 'none';
+  }
+
+  return note;
+}
+
+
+function getItemByKey(key){
+  return ITEMS.find(function(item){ return item.key === key; }) || null;
+}
+
+const STOCK_RESULT_DELAY_MINUTES_V112=2;
+
+function stockResultKeyV112(key){
+  return [
+    'nikkei','nikkei_vip',
+    'china','china_vip',
+    'hsi','hsi_vip',
+    'taiwan','taiwan_vip',
+    'nikkei_pm','nikkei_pm_vip',
+    'korea','korea_vip',
+    'china_pm','china_pm_vip',
+    'hsi_pm','hsi_pm_vip',
+    'singapore','singapore_vip'
+  ].includes(String(key||''));
+}
+
+function drawTimeReached(key){
+  const item = getItemByKey(key);
+  if(!item || !item.draw) return true;
+
+  const parts = String(item.draw).split(':');
+  if(parts.length !== 2) return true;
+
+  const hh = Number(parts[0]);
+  const mm = Number(parts[1]);
+  if(!Number.isFinite(hh) || !Number.isFinite(mm)) return true;
+
+  const nowParts=
+    new Intl.DateTimeFormat(
+      'en-GB',
+      {
+        timeZone:'Asia/Bangkok',
+        hour:'2-digit',
+        minute:'2-digit',
+        hourCycle:'h23'
+      }
+    ).formatToParts(new Date());
+
+  const map=
+    Object.fromEntries(
+      nowParts.map(function(p){
+        return [p.type,p.value];
+      })
+    );
+
+  const nowMinutes=
+    Number(map.hour)*60+
+    Number(map.minute);
+
+  let drawMinutes=
+    hh*60+mm;
+
+  if(stockResultKeyV112(key)){
+    drawMinutes+=STOCK_RESULT_DELAY_MINUTES_V112;
+  }
+
+  // หวยรอบดึกหลังเที่ยงคืน
+  if(item.nextDay){
+    if(nowMinutes >= 12 * 60) return false;
+    return nowMinutes >= drawMinutes;
+  }
+
+  // ก่อน 04:00 ยังเป็น operational day ของวันก่อน
+  if(
+    nowMinutes <
+    OPERATIONAL_DAY_CUTOFF_MINUTES_V113 &&
+    drawMinutes >=
+      OPERATIONAL_DAY_CUTOFF_MINUTES_V113
+  ){
+    return true;
+  }
+
+  return nowMinutes >= drawMinutes;
+}
+
+function setWaitingResult(key){
+  const four = marketElement('result-' + key + '-four');
+  const top = marketElement('result-' + key + '-top');
+  const bottom = marketElement('result-' + key + '-bottom');
+
+  if(four){
+    four.textContent = '-';
+    four.classList.add('waiting');
+  }
+  if(top){
+    top.textContent = '-';
+    top.classList.add('waiting');
+  }
+  if(bottom){
+    bottom.textContent = '-';
+    bottom.classList.add('waiting');
+  }
+}
+
+function clearWaitingResult(key){
+  const four = marketElement('result-' + key + '-four');
+  const top = marketElement('result-' + key + '-top');
+  const bottom = marketElement('result-' + key + '-bottom');
+  if(four) four.classList.remove('waiting');
+  if(top) top.classList.remove('waiting');
+  if(bottom) bottom.classList.remove('waiting');
+}
+
+
+
+const OPERATIONAL_DAY_CUTOFF_MINUTES_V113=240;
+
+function bangkokDatePartsV113(){
+  const parts=
+    new Intl.DateTimeFormat(
+      'en-CA',
+      {
+        timeZone:'Asia/Bangkok',
+        year:'numeric',
+        month:'2-digit',
+        day:'2-digit',
+        hour:'2-digit',
+        minute:'2-digit',
+        hourCycle:'h23'
+      }
+    ).formatToParts(new Date());
+
+  return Object.fromEntries(
+    parts.map(function(p){
+      return [p.type,p.value];
+    })
+  );
+}
+
+function addDateDaysV113(dateString,days){
+  const m=
+    String(dateString||'')
+      .match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if(!m){
+    return dateString;
+  }
+
+  const d=
+    new Date(
+      Date.UTC(
+        Number(m[1]),
+        Number(m[2])-1,
+        Number(m[3])
+      )
+    );
+
+  d.setUTCDate(
+    d.getUTCDate()+Number(days||0)
+  );
+
+  return d.toISOString().slice(0,10);
+}
+
+function operationalDateKeyV113(){
+  const p=bangkokDatePartsV113();
+
+  const today=
+    p.year+'-'+p.month+'-'+p.day;
+
+  const nowMinutes=
+    Number(p.hour)*60+
+    Number(p.minute);
+
+  if(
+    nowMinutes <
+    OPERATIONAL_DAY_CUTOFF_MINUTES_V113
+  ){
+    return addDateDaysV113(
+      today,
+      -1
+    );
+  }
+
+  return today;
+}
+
+function expectedResultDateForKeyV113(key){
+  const base=
+    operationalDateKeyV113();
+
+  const item=getItemByKey(key);
+
+  if(
+    currentBoard==='night' &&
+    item &&
+    item.nextDay
+  ){
+    return addDateDaysV113(
+      base,
+      1
+    );
+  }
+
+  return base;
+}
+
+function rowMatchesOperationalDateV113(row){
+  if(!row) return false;
+
+  return (
+    String(row.resultDate||'') ===
+    expectedResultDateForKeyV113(
+      String(row.key||'')
+    )
+  );
+}
+
+function bangkokTodayKeyV94(){
+  const parts =
+    new Intl.DateTimeFormat(
+      'en-CA',
+      {
+        timeZone:'Asia/Bangkok',
+        year:'numeric',
+        month:'2-digit',
+        day:'2-digit'
+      }
+    ).formatToParts(
+      new Date()
+    );
+
+  const map =
+    Object.fromEntries(
+      parts.map(function(p){
+        return [p.type,p.value];
+      })
+    );
+
+  return (
+    map.year +
+    '-' +
+    map.month +
+    '-' +
+    map.day
+  );
+}
+
+function rowIsTodayV94(row){
+  return rowMatchesOperationalDateV113(row);
+}
+
+function canShowResult(key,row){
+  if(!resultsVisible) return false;
+
+  if(
+    typeof drawTimeReached === 'function' &&
+    !drawTimeReached(key)
+  ){
+    return false;
+  }
+
+  if(row){
+    if(row.pending) return false;
+
+    // V94:
+    // ห้ามเลขเมื่อวาน/วันเก่าแสดง แม้เคยเปิด force show
+    if(!rowIsTodayV94(row)){
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+function isVipResultKey(key){
+  return AUTO_VIP_KEYS.indexOf(key) !== -1;
+}
+
+function isAutoResultKey(key){
+  return AUTO_MARKET_KEYS.indexOf(key) !== -1;
+}
+
+function updateResultSwitchButtons(){
+  const resultBtn = document.getElementById('resultToggle');
+  const vipBtn = document.getElementById('vipResultToggle');
+  const autoBtn = document.getElementById('autoResultToggle');
+
+  if(resultBtn){
+    resultBtn.textContent = resultsVisible
+      ? '🔒 ปิดแสดงผลหวย'
+      : '🔓 เปิดแสดงผลหวย';
+    resultBtn.classList.toggle('active', resultsVisible);
+    resultBtn.classList.toggle('off', !resultsVisible);
+  }
+
+  if(vipBtn){
+    vipBtn.textContent = vipNoteVisible ? '✅ VIP ผล' : '❌ VIP ผล';
+    vipBtn.classList.toggle('active', vipNoteVisible);
+    vipBtn.classList.toggle('off', !vipNoteVisible);
+  }
+
+  if(autoBtn){
+    autoBtn.textContent = autoNoteVisible ? '✅ AUTO ผล' : '❌ AUTO ผล';
+    autoBtn.classList.toggle('active', autoNoteVisible);
+    autoBtn.classList.toggle('off', !autoNoteVisible);
+  }
+}
+
+function setNoteVisibleForKey(key, visible){
+  const note = document.getElementById('market-note-' + key);
+  if(note){
+    note.style.display = visible ? '' : 'none';
+  }
+}
+
+function applyNoteVisibility(){
+  ITEMS.forEach(function(item){
+    if(isVipResultKey(item.key)){
+      setNoteVisibleForKey(item.key, vipNoteVisible);
+    }else if(isAutoResultKey(item.key)){
+      setNoteVisibleForKey(item.key, autoNoteVisible);
+    }
+  });
+
+  updateResultSwitchButtons();
+}
+
+function toggleVipNote(){
+  vipNoteVisible = !vipNoteVisible;
+  applyNoteVisibility();
+}
+
+function toggleAutoNote(){
+  autoNoteVisible = !autoNoteVisible;
+  applyNoteVisibility();
+}
+
+function setResultVisibilityForKey(key){
+  const four = marketElement('result-' + key + '-four');
+  const top = marketElement('result-' + key + '-top');
+  const bottom = marketElement('result-' + key + '-bottom');
+
+  if(resultsVisible){
+    // ค่าจริงจะถูกวาดใหม่จากข้อมูลล่าสุด
+    return;
+  }
+
+  if(four) four.textContent = '-';
+  if(top) top.textContent = '-';
+  if(bottom) bottom.textContent = '-';
+}
+
+function applyResultVisibility(){
+  ITEMS.forEach(function(item){
+    setResultVisibilityForKey(item.key);
+  });
+
+  updateResultSwitchButtons();
+}
+
+function toggleResults(){
+  resultsVisible = !resultsVisible;
+
+  applyResultVisibility();
+
+  if(!resultsVisible){
+    // ปิดแล้วให้เป็น - ทันทีทุกการ์ด
+    ITEMS.forEach(function(item){
+      setWaitingResult(item.key);
+    });
+    return;
+  }
+
+  // เปิดกลับ: โหลดข้อมูลล่าสุดใหม่เสมอ
+  // และ canShowResult() จะยอมแสดงเฉพาะผลของวันนี้เท่านั้น
+  try{
+    refreshMarketCards();
+  }catch(err){
+    console.error(
+      'refreshMarketCards',
+      err
+    );
+  }
+}
+
+
+function updateMarketCard(key, row){
+  if(!row) return;
+
+  if(!drawTimeReached(key)){
+    setWaitingResult(key);
+  }else{
+    clearWaitingResult(key);
+  }
+
+  const current = marketElement('market-current-' + key);
+  const prev = marketElement('market-prev-' + key);
+  const change = marketElement('market-change-' + key);
+  const percent = marketElement('market-percent-' + key);
+  const topResult = marketElement('result-' + key + '-top');
+  const bottomResult = marketElement('result-' + key + '-bottom');
+  const note = ensureMarketNote(key);
+
+  // V109:
+  // ถ้ามี Last/Prev.Close/Change แล้ว ให้แสดงทันที
+  // แม้ผลหวยยัง pending เพื่อไม่ให้ค้าง "กำลังโหลด..."
+  const currentNumber =
+    Number(
+      row.current ??
+      row.last
+    );
+
+  const prevNumber =
+    Number(
+      row.previousClose ??
+      row.prevClose ??
+      row.previous_close
+    );
+
+  const changeNumber =
+    Number(
+      row.change
+    );
+
+  if(current){
+    current.textContent =
+      Number.isFinite(currentNumber)
+        ? formatMarketNumber(currentNumber)
+        : (
+            row.error
+              ? 'รอข้อมูล'
+              : 'กำลังโหลด...'
+          );
+  }
+
+  if(prev){
+    prev.textContent =
+      Number.isFinite(prevNumber)
+        ? formatMarketNumber(prevNumber)
+        : '--';
+  }
+
+  if(change){
+    change.textContent =
+      Number.isFinite(changeNumber)
+        ? formatSigned(changeNumber)
+        : '--';
+
+    if(Number.isFinite(changeNumber)){
+      change.style.color =
+        changeNumber >= 0
+          ? '#22c55e'
+          : '#ffb7b7';
+    }
+  }
+
+  if(percent){
+    const pct=Number(row.percent);
+
+    percent.textContent =
+      Number.isFinite(pct)
+        ? (
+            (pct >= 0 ? '+' : '') +
+            pct.toFixed(2) +
+            '%'
+          )
+        : '--';
+
+    if(Number.isFinite(pct)){
+      percent.style.color =
+        pct >= 0
+          ? '#22c55e'
+          : '';
+    }
+  }
+
+  if(
+    row.pending ||
+    !rowIsTodayV94(row)
+  ){
+    if(topResult) topResult.textContent = '-';
+    if(bottomResult) bottomResult.textContent = '-';
+
+    if(note){
+      note.textContent = 'รอผล';
+      note.className = 'market-live-note';
+    }
+    return;
+  }
+
+  if(row.ok || row.stale){
+    // AUTO RESULT RULES
+    // นิเคอิเช้า: บน = Last 3 หลักท้าย / ล่าง = Change 2 หลักท้าย
+    // จีนเช้า: บน = Last 3 หลักท้าย / ล่าง = Change 2 หลักท้าย
+    // ฮั่งเส็งเช้า/บ่าย และหุ้น Yahoo อื่น ๆ: บน = Last 3 หลักท้าย / ล่าง = Change 2 หลักท้าย
+    // ตัวอย่าง HSI Last 25,565.74 / Change -87.23 => 574 / 23
+    // ตัวอย่าง Singapore Last 5,684.12 / Change -37.47 => 412 / 47
+    if(canShowResult(key,row) && (
+      key === 'nikkei' ||
+      key === 'china' ||
+      key === 'hsi' ||
+      key === 'nikkei_pm' ||
+      key === 'china_pm' ||
+      key === 'hsi_pm' ||
+      key === 'taiwan' ||
+      key === 'korea' ||
+      key === 'singapore'
+    )){
+      const lastDigits = Number.isFinite(Number(row.current))
+        ? Math.abs(Number(row.current)).toFixed(2).replace(/\D/g,'')
+        : '';
+
+      const changeDigits = Number.isFinite(Number(row.change))
+        ? Math.abs(Number(row.change)).toFixed(2).replace(/\D/g,'')
+        : '';
+
+      const topValue = lastDigits
+        ? lastDigits.slice(-3).padStart(3,'0')
+        : 'XXX';
+
+      const bottomValue = changeDigits
+        ? changeDigits.slice(-2).padStart(2,'0')
+        : 'XX';
+
+      if(canShowResult(key,row)){
+        if(topResult) topResult.textContent = topValue;
+        if(bottomResult) bottomResult.textContent = bottomValue;
+      }else{
+        if(topResult) topResult.textContent = '-';
+        if(bottomResult) bottomResult.textContent = '-';
+      }
+    }else if(canShowResult(key,row)){
+      if(canShowResult(key,row)){
+        if(topResult && row.top !== undefined && row.top !== null){
+          topResult.textContent = String(row.top).padStart(3,'0').slice(-3);
+        }
+        if(bottomResult && row.bottom !== undefined && row.bottom !== null){
+          bottomResult.textContent = String(row.bottom).padStart(2,'0').slice(-2);
+        }
+      }else{
+        if(topResult) topResult.textContent = '-';
+        if(bottomResult) bottomResult.textContent = '-';
+      }
+    }
+
+    if(note){
+      note.textContent = row.stale ? 'ผลล่าสุด' : 'AUTO ผล';
+      note.className = 'market-live-note' + (row.stale ? ' stale' : '');
+    }
+  }else{
+    if(note){
+      note.textContent = 'ERROR';
+      note.className = 'market-live-note stale';
+    }
+  }
+}
+
+
+
+function updateManualStockResultV120(key,row){
+  const top=marketElement('result-'+key+'-top');
+  const bottom=marketElement('result-'+key+'-bottom');
+  const note=ensureMarketNote(key);
+
+  if(
+    !resultsVisible ||
+    !drawTimeReached(key) ||
+    !row ||
+    row.pending ||
+    !rowIsTodayV94(row) ||
+    !row.top ||
+    !row.bottom
+  ){
+    if(top) top.textContent='-';
+    if(bottom) bottom.textContent='-';
+
+    if(note){
+      note.textContent='';
+      note.className='market-live-note';
+      note.style.display='none';
+    }
+    return;
+  }
+
+  if(top){
+    top.textContent=
+      String(row.top)
+        .replace(/\D/g,'')
+        .padStart(3,'0')
+        .slice(-3);
+  }
+
+  if(bottom){
+    bottom.textContent=
+      String(row.bottom)
+        .replace(/\D/g,'')
+        .padStart(2,'0')
+        .slice(-2);
+  }
+
+  if(note){
+    note.textContent='';
+    note.className='market-live-note';
+    note.style.display='none';
+  }
+}
+
+function normalizeVipResult(v, digits){
+  if(v === null || v === undefined) return '-';
+  const raw = String(v).trim();
+  if(!raw || raw === '-' || raw === '--') return '-';
+  const only = raw.replace(/\D/g,'');
+  if(!only) return '-';
+  if(digits && only.length > digits) return only.slice(-digits);
+  return only;
+}
+
+function updateVipResult(key, row){
+  const top = marketElement('result-' + key + '-top');
+  const bottom = marketElement('result-' + key + '-bottom');
+  const note = ensureMarketNote(key);
+
+  function showVipWaiting(message='VIP รอผล'){
+    if(top){
+      top.textContent = '-';
+      top.classList.add('waiting');
+    }
+
+    if(bottom){
+      bottom.textContent = '-';
+      bottom.classList.add('waiting');
+    }
+
+    if(note){
+      note.textContent = message;
+      note.className = 'market-live-note';
+    }
+  }
+
+  if(!resultsVisible){
+    showVipWaiting('VIP รอผล');
+    return;
+  }
+
+  if(!drawTimeReached(key)){
+    showVipWaiting('VIP รอผล');
+    return;
+  }
+
+  const expectedDate =
+    expectedResultDateForKeyV113(key);
+
+  const resultDate =
+    row && row.resultDate
+      ? String(row.resultDate)
+      : '';
+
+  if(
+    !row ||
+    row.pending ||
+    resultDate !== expectedDate
+  ){
+    showVipWaiting('VIP รอผล');
+    return;
+  }
+
+  let topValue =
+    row.top !== undefined &&
+    row.top !== null &&
+    String(row.top) !== ''
+      ? normalizeVipResult(row.top,3)
+      : '';
+
+  let bottomValue =
+    row.bottom !== undefined &&
+    row.bottom !== null &&
+    String(row.bottom) !== ''
+      ? normalizeVipResult(row.bottom,2)
+      : '';
+
+  // V109:
+  // ใช้สูตรเดียวกับ Singapore VIP เป็น fallback ทุก VIP
+  // Last/Current -> 3 ตัวท้าย
+  // Change -> 2 ตัวท้าย
+  if(
+    !topValue ||
+    topValue==='-' ||
+    !bottomValue ||
+    bottomValue==='-'
+  ){
+    const currentNumber =
+      Number(
+        row.current ??
+        row.last
+      );
+
+    const changeNumber =
+      Number(
+        row.change
+      );
+
+    if(
+      Number.isFinite(currentNumber) &&
+      Number.isFinite(changeNumber)
+    ){
+      const currentDigits =
+        Math.abs(currentNumber)
+          .toFixed(2)
+          .replace(/\D/g,'');
+
+      const changeDigits =
+        Math.abs(changeNumber)
+          .toFixed(2)
+          .replace(/\D/g,'');
+
+      topValue =
+        currentDigits
+          .slice(-3)
+          .padStart(3,'0');
+
+      bottomValue =
+        changeDigits
+          .slice(-2)
+          .padStart(2,'0');
+    }
+  }
+
+  if(!topValue || !bottomValue){
+    showVipWaiting('VIP รอผล');
+    return;
+  }
+
+  clearWaitingResult(key);
+
+  if(top){
+    top.textContent = topValue;
+    top.classList.remove('waiting');
+  }
+
+  if(bottom){
+    bottom.textContent = bottomValue;
+    bottom.classList.remove('waiting');
+  }
+
+  if(note){
+    note.textContent =
+      row.manual
+        ? 'VIP ผลหลังบ้าน'
+        : 'VIP AUTO';
+
+    note.className =
+      'market-live-note' +
+      (row.stale ? ' stale' : '');
+  }
+}
+
+
+function laoDevelopmentResultV136(row){
+  row=row||{};
+
+  const clean=function(value,length){
+    const raw=String(value??'').replace(/\D/g,'');
+    return raw ? raw.padStart(length,'0').slice(-length) : '';
+  };
+
+  let four=clean(
+    row.fourDigitResult ??
+    row.fourDigit ??
+    row.four ??
+    row.result4,
+    4
+  );
+
+  let top=clean(row.top,3);
+  let bottom=clean(row.bottom,2);
+
+  // ถ้ามีผล 4 ตัว ให้เป็นข้อมูลหลัก
+  // 1234 => 3 ตัวบน 234 / 2 ตัวล่าง 12
+  if(four){
+    top=four.slice(-3);
+    bottom=four.slice(0,2);
+  }
+
+  // รองรับข้อมูลเดิมที่เก็บไว้เป็น 3 ตัวบน + 2 ตัวล่าง
+  // เช่น 234 + 12 สามารถย้อนกลับเป็น 1234 ได้
+  if(!four && top.length===3 && bottom.length===2 && bottom.slice(-1)===top.slice(0,1)){
+    four=bottom.slice(0,1)+top;
+  }
+
+  return {four,top,bottom};
+}
+
+function updateLaoDevelopmentResultV102(row){
+  const key='lao_development_live';
+  const four=document.getElementById('result-'+key+'-four');
+  const top=document.getElementById('result-'+key+'-top');
+  const bottom=document.getElementById('result-'+key+'-bottom');
+  const note=document.getElementById('market-note-'+key);
+  const value=laoDevelopmentResultV136(row);
+
+  const valid=!!(
+    resultsVisible &&
+    row &&
+    row.ok &&
+    !row.pending &&
+    rowIsTodayV94(row) &&
+    value.four &&
+    value.top &&
+    value.bottom
+  );
+
+  if(!valid){
+    if(four) four.textContent='-';
+    if(top) top.textContent='-';
+    if(bottom) bottom.textContent='-';
+
+    if(note){
+      note.textContent='รอผล';
+      note.className='market-live-note lao-result-note';
+    }
+    return;
+  }
+
+  if(four) four.textContent=value.four;
+  if(top) top.textContent=value.top;
+  if(bottom) bottom.textContent=value.bottom;
+
+  if(note){
+    note.textContent=row.manual ? 'ผลหลังบ้าน' : 'ผลล่าสุด';
+    note.className='market-live-note lao-result-note';
+  }
+}
+
+
+const stockRecoveryLastV109={};
+
+function recoverMissingStocksV109(results){
+  const stockKeys=
+    AUTO_MARKET_KEYS
+      .concat(AUTO_VIP_KEYS);
+
+  stockKeys.forEach(function(key){
+    if(!drawTimeReached(key)){
+      return;
+    }
+
+    const row=
+      results &&
+      results[key];
+
+    const hasMarketData=
+      row &&
+      (
+        Number.isFinite(Number(row.current)) ||
+        Number.isFinite(Number(row.last))
+      );
+
+    const hasResult=
+      row &&
+      !row.pending &&
+      rowIsTodayV94(row) &&
+      row.top &&
+      row.bottom;
+
+    if(hasResult || hasMarketData){
+      return;
+    }
+
+    const now=Date.now();
+    const last=
+      Number(
+        stockRecoveryLastV109[key] || 0
+      );
+
+    // ฝั่ง browser ขอ recovery ไม่เกิน key ละ 30 วินาที
+    if(now-last < 30000){
+      return;
+    }
+
+    stockRecoveryLastV109[key]=now;
+
+    fetch(
+      '/api/live-sync?key=' +
+      encodeURIComponent(key),
+      {
+        cache:'no-store'
+      }
+    )
+    .then(function(r){
+      return r.json();
+    })
+    .then(function(){
+      setTimeout(
+        refreshMarketCards,
+        1200
+      );
+    })
+    .catch(function(err){
+      console.error(
+        'stock recovery',
+        key,
+        err
+      );
+    });
+  });
+}
+
+
+
+function sharedVipRowV110(key,results){
+  if(!results) return null;
+
+  const peers={
+    nikkei_vip:[
+      'nikkei_vip',
+      'nikkei_pm_vip'
+    ],
+    nikkei_pm_vip:[
+      'nikkei_vip',
+      'nikkei_pm_vip'
+    ],
+    hsi_vip:[
+      'hsi_vip',
+      'hsi_pm_vip'
+    ],
+    hsi_pm_vip:[
+      'hsi_vip',
+      'hsi_pm_vip'
+    ],
+    china_vip:[
+      'china_vip'
+    ]
+  };
+
+  const keys=
+    peers[key] || [key];
+
+  const candidates=
+    keys
+      .map(function(k){
+        return results[k];
+      })
+      .filter(function(row){
+        return !!(
+          row &&
+          row.ok &&
+          !row.pending &&
+          row.top &&
+          row.bottom &&
+          rowIsTodayV94(row)
+        );
+      });
+
+  if(!candidates.length){
+    return results[key] || null;
+  }
+
+  candidates.sort(function(a,b){
+    const ta=
+      Date.parse(
+        a.fetchedAt ||
+        a.repairedAt ||
+        ''
+      ) || 0;
+
+    const tb=
+      Date.parse(
+        b.fetchedAt ||
+        b.repairedAt ||
+        ''
+      ) || 0;
+
+    return tb-ta;
+  });
+
+  return candidates[0];
+}
+
+
+function refreshMarketCards(){
+  fetch(
+    '/api/results?board='+
+    encodeURIComponent(currentBoard)+
+    '&date='+
+    encodeURIComponent(operationalDateKeyV113())+
+    '&operational=1',
+    {cache:'no-store'}
+  )
+    .then(r=>r.json())
+    .then(function(data){
+      if(!data||!data.results)return; window.__latestMarketData=data;
+
+      if(currentBoard==='lao-development'){
+        updateLaoDevelopmentResultV102(
+          data.results.lao_development_live
+        );
+      }
+
+      AUTO_MARKET_KEYS.forEach(function(key){
+        updateMarketCard(
+          key,
+          data.results[key]
+        );
+      });
+
+      MANUAL_STOCK_KEYS.forEach(function(key){
+        updateManualStockResultV120(
+          key,
+          data.results[key]
+        );
+      });
+
+      AUTO_VIP_KEYS.forEach(function(key){
+        updateVipResult(
+          key,
+          data.results[key]
+        );
+      });
+
+      recoverMissingStocksV109(
+        data.results
+      );
+    })
+    .catch(function(err){
+      console.error('snapshot failed',err);
+      AUTO_MARKET_KEYS.concat(MANUAL_STOCK_KEYS).concat(AUTO_VIP_KEYS).forEach(function(key){
+        const note=ensureMarketNote(key); if(note){note.textContent=key.indexOf('_vip')>-1?'VIP รอผล':'รอผล';note.className='market-live-note stale';}
+      });
+    });
+}
+
+
+function getBoardFromHash(){
+  const h = String(location.hash || '').toLowerCase();
+  if(h === '#test') return 'test';
+  if(h === '#night') return 'night';
+  if(h === '#lao-development') return 'lao-development';
+  if(h === '#hanoi') return 'hanoi';
+  if(h === '#evening') return 'evening';
+  if(h === '#afternoon') return 'afternoon';
+  return 'morning';
+}
+
+function getBoardConfig(board){
+  if(board === 'test'){
+    return {
+      name:'test',
+      items:TEST_ITEMS,
+      marketKeys:TEST_AUTO_MARKET_KEYS,
+      manualStockKeys:TEST_MANUAL_STOCK_KEYS,
+      vipKeys:TEST_AUTO_VIP_KEYS,
+      title:'ทดสอบ'
+    };
+  }
+
+  if(board === 'lao-development'){
+    return {
+      name:'lao-development',
+      items:LAO_DEVELOPMENT_ITEMS,
+      marketKeys:LAO_DEVELOPMENT_AUTO_MARKET_KEYS,
+      manualStockKeys:LAO_DEVELOPMENT_MANUAL_STOCK_KEYS,
+      vipKeys:LAO_DEVELOPMENT_AUTO_VIP_KEYS,
+      title:'ลาวพัฒนา',
+      liveBoard:true
+    };
+  }
+
+  if(board === 'night'){
+    return {
+      name:'night',
+      items:NIGHT_ITEMS,
+      marketKeys:NIGHT_AUTO_MARKET_KEYS,
+      manualStockKeys:NIGHT_MANUAL_STOCK_KEYS,
+      vipKeys:NIGHT_AUTO_VIP_KEYS,
+      title:'ดึก'
+    };
+  }
+
+  if(board === 'hanoi'){
+    return {
+      name:'hanoi',
+      items:HANOI_ITEMS,
+      marketKeys:HANOI_AUTO_MARKET_KEYS,
+      manualStockKeys:HANOI_MANUAL_STOCK_KEYS,
+      vipKeys:HANOI_AUTO_VIP_KEYS,
+      title:'ฮานอย'
+    };
+  }
+
+  if(board === 'evening'){
+    return {
+      name:'evening',
+      items:EVENING_ITEMS,
+      marketKeys:EVENING_AUTO_MARKET_KEYS,
+      manualStockKeys:EVENING_MANUAL_STOCK_KEYS,
+      vipKeys:EVENING_AUTO_VIP_KEYS,
+      title:'เย็น'
+    };
+  }
+
+  if(board === 'afternoon'){
+    return {
+      name:'afternoon',
+      items:AFTERNOON_ITEMS,
+      marketKeys:AFTERNOON_AUTO_MARKET_KEYS,
+      manualStockKeys:AFTERNOON_MANUAL_STOCK_KEYS,
+      vipKeys:AFTERNOON_AUTO_VIP_KEYS,
+      title:'บ่าย'
+    };
+  }
+
+  return {
+    name:'morning',
+    items:MORNING_ITEMS,
+    marketKeys:MORNING_AUTO_MARKET_KEYS,
+    manualStockKeys:MORNING_MANUAL_STOCK_KEYS,
+    vipKeys:MORNING_AUTO_VIP_KEYS,
+    title:'เช้า'
+  };
+}
+
+function updateBoardTabs(){
+  const tabs = {
+    morning: document.getElementById('tabMorning'),
+    afternoon: document.getElementById('tabAfternoon'),
+    evening: document.getElementById('tabEvening'),
+    hanoi: document.getElementById('tabHanoi'),
+    'lao-development': document.getElementById('tabLaoDevelopment'),
+    night: document.getElementById('tabNight'),
+    test: document.getElementById('tabTest')
+  };
+
+  Object.keys(tabs).forEach(function(name){
+    const el = tabs[name];
+    if(!el) return;
+    const active = currentBoard === name;
+    el.classList.toggle('active', active);
+    el.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+}
+
+function setTickerForBoard(){
+  const el = document.getElementById('tickerText');
+  if(!el) return;
+
+  const customTicker=
+    SITE_MESSAGES_V129 &&
+    SITE_MESSAGES_V129.tickers
+      ? String(
+          SITE_MESSAGES_V129.tickers[currentBoard] ||
+          ''
+        ).trim()
+      : '';
+
+  if(customTicker){
+    el.textContent=customTicker;
+    return;
+  }
+
+  if(currentBoard === 'test'){
+    el.innerHTML = 'ลาว<b>ประตูชัย</b> • AUTO API';
+    return;
+  }
+
+  if(currentBoard === 'lao-development'){
+    el.innerHTML = '🇱🇦 <b>ลาวพัฒนา LIVE</b> • ถ่ายทอดสด';
+    return;
+  }
+
+  if(currentBoard === 'night'){
+    el.innerHTML =
+      'ลาวสามัคคี / ลาวอาเซียน / ลาวสามัคคี <b>VIP</b> / ลาว <b>VIP</b> / ' +
+      'ลาวสตาร์ <b>VIP</b> / ฮานอย <b>EXTRA</b> / ลาวกาชาด / ' +
+      'ดาวโจนส์ <b>VIP</b> / ดาวโจนส์ <b>STAR</b>';
+    return;
+  }
+
+  if(currentBoard === 'hanoi'){
+    el.innerHTML =
+      'ฮานอยสามัคคี / ฮานอยพิเศษ / ฮานอยปกติ / ฮานอย <b>VIP</b> / ฮานอยพัฒนา';
+    return;
+  }
+
+  if(currentBoard === 'evening'){
+    el.innerHTML =
+      'ฮั่งเส็งบ่าย / ฮั่งเส็งบ่าย <b>VIP</b> / ลาว<b>สตาร์</b> / ฮานอยกาชาด / ' +
+      'หุ้นสิงคโปร์ / สิงคโปร์ <b>VIP</b>';
+    return;
+  }
+
+  if(currentBoard === 'afternoon'){
+    el.innerHTML =
+      'ฮานอย<b>สตาร์</b> / หุ้นไต้หวัน / เกาหลี <b>VIP</b> / ' +
+      'นิเคอิบ่าย <b>VIP</b> / นิเคอิบ่าย / หุ้นเกาหลี / ลาว<b>HD</b> / หุ้นจีนบ่าย / จีนบ่าย <b>VIP</b>';
+    return;
+  }
+
+  el.innerHTML =
+    'ลาว<b>EXTRA</b> / นิเคอิเช้า <b>VIP</b> / นิเคอิเช้า / ฮานอยอาเซียน / ' +
+    'จีนเช้า <b>VIP</b> / จีนเช้า / ลาว<b>TV</b> / ฮั่งเส็งเช้า <b>VIP</b> / ' +
+    'ฮั่งเส็งเช้า / ฮานอย<b>HD</b>';
+}
+
+// ===== V137: วันที่อัตโนมัติใต้หัวข้อทุกกระดาน (เวลาไทย) =====
+const BOARD_DATE_FORMATTER_V137 = new Intl.DateTimeFormat('th-TH', {
+  timeZone: 'Asia/Bangkok',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
+});
+
+function updateBoardDateV137(){
+  const el = document.getElementById('boardDate');
+  if(!el) return;
+  el.textContent = 'วันที่ ' + BOARD_DATE_FORMATTER_V137.format(new Date());
+}
+
+function startBoardDateClockV137(){
+  updateBoardDateV137();
+  if(window.__boardDateTimerV137) clearInterval(window.__boardDateTimerV137);
+  window.__boardDateTimerV137 = setInterval(updateBoardDateV137, 60000);
+}
+
+let boardSwitchBusy = false;
+
+function renderSelectedBoard(board){
+  const cfg = getBoardConfig(board);
+
+  if(boardSwitchBusy) return;
+  boardSwitchBusy = true;
+
+  try{
+    currentBoard = cfg.name;
+    ITEMS = cfg.items;
+    AUTO_MARKET_KEYS = cfg.marketKeys;
+    MANUAL_STOCK_KEYS = cfg.manualStockKeys || [];
+    AUTO_VIP_KEYS = cfg.vipKeys;
+
+    const title = document.getElementById('boardTitle');
+    if(title){
+      title.innerHTML = cfg.liveBoard
+        ? '<b>ไลฟ์สด</b> ' + cfg.title
+        : '<b>ไลฟ์สด</b> กระดาน' + cfg.title;
+    }
+
+    document.title = cfg.liveBoard
+      ? 'ไลฟ์สด ' + cfg.title
+      : 'ไลฟ์สด กระดาน' + cfg.title;
+
+    updateBoardDateV137();
+    updateBoardTabs();
+    setTickerForBoard();
+    updateResultSwitchButtons();
+
+    state = Object.fromEntries(
+      ITEMS.map(function(x){
+        return [x.key, deepCopy(x)];
+      })
+    );
+
+    renderBoard();
+
+    ITEMS.forEach(function(x){
+      applyAll(x.key);
+    });
+
+    if(typeof applyResultVisibility === 'function'){
+      applyResultVisibility();
+    }
+
+    if(typeof applyNoteVisibility === 'function'){
+      applyNoteVisibility();
+    }
+
+    window.__latestMarketData = null;
+
+    try{
+      loadServerSettings();
+    }catch(err){
+      console.error('loadServerSettings', err);
+    }
+
+    try{
+      refreshMarketCards();
+    }catch(err){
+      console.error('refreshMarketCards', err);
+    }
+
+    setTimeout(
+      refreshLiveMarketsV129,
+      250
+    );
+  }catch(err){
+    console.error('renderSelectedBoard failed', err);
+
+    const boardEl = document.getElementById('board');
+    if(boardEl){
+      boardEl.innerHTML =
+        '<div style="grid-column:1/-1;background:#fff;color:#9b0000;border-radius:12px;padding:18px;font-weight:800">' +
+        'สลับกระดานไม่สำเร็จ กรุณากดใหม่' +
+        '</div>';
+    }
+  }finally{
+    boardSwitchBusy = false;
+  }
+}
+
+function goBoard(board){
+  const target =
+    board === 'test'
+      ? 'test'
+      : (board === 'night'
+          ? 'night'
+          : (board === 'lao-development'
+              ? 'lao-development'
+              : (board === 'hanoi'
+                  ? 'hanoi'
+                  : (board === 'evening'
+                      ? 'evening'
+                      : (board === 'afternoon' ? 'afternoon' : 'morning')))));
+
+  // สลับกระดานก่อน แล้วค่อยอัปเดต hash
+  renderSelectedBoard(target);
+
+  try{
+    history.replaceState(null, '', '#' + target);
+  }catch(e){
+    try{
+      location.hash = target;
+    }catch(ignore){}
+  }
+}
+
+window.addEventListener('hashchange', function(){
+  const target = getBoardFromHash();
+  if(target !== currentBoard){
+    renderSelectedBoard(target);
+  }
+});
+
+
+const STOCK_PREVIEW_PENDING_V126={};
+const STOCK_PREVIEW_LAST_V126={};
+
+function refreshOneStockPreviewV126(key){
+  const c=state[key];
+  const img=document.getElementById('frame-'+key);
+
+  if(
+    !c ||
+    c.stockPreview!==true ||
+    !img ||
+    img.tagName!=='IMG' ||
+    !c.url
+  ){
+    return;
+  }
+
+  const nextUrl=stockPreviewUrlV121(key,c.url);
+
+  if(
+    !nextUrl ||
+    STOCK_PREVIEW_PENDING_V126[key]===nextUrl ||
+    STOCK_PREVIEW_LAST_V126[key]===nextUrl
+  ){
+    return;
+  }
+
+  // V126:
+  // โหลดภาพใหม่แบบซ่อนอยู่เบื้องหลัง
+  // ระหว่างโหลดให้ภาพเดิมค้างอยู่ ไม่เปลี่ยนเป็นหน้าโหลด/ภาพหมุน
+  const preload=new Image();
+
+  STOCK_PREVIEW_PENDING_V126[key]=nextUrl;
+
+  preload.onload=function(){
+    if(STOCK_PREVIEW_PENDING_V126[key]!==nextUrl){
+      return;
+    }
+
+    img.src=nextUrl;
+    STOCK_PREVIEW_LAST_V126[key]=nextUrl;
+    delete STOCK_PREVIEW_PENDING_V126[key];
+  };
+
+  preload.onerror=function(){
+    // ถ้ารอบนี้โหลดไม่สำเร็จ ให้คงภาพเดิมไว้
+    // รอบถัดไปค่อยลองใหม่
+    if(STOCK_PREVIEW_PENDING_V126[key]===nextUrl){
+      delete STOCK_PREVIEW_PENDING_V126[key];
+    }
+  };
+
+  preload.src=nextUrl;
+}
+
+function refreshBlockedStockPreviewsV121(){
+  // ลดการกินเน็ต/จำนวน screenshot:
+  // ไม่โหลดภาพใหม่ตอนแท็บถูกซ่อน
+  if(document.hidden){
+    return;
+  }
+
+  const keys=[
+    'nikkei',
+    'nikkei_pm',
+    'hsi',
+    'hsi_pm',
+    'korea',
+    'singapore'
+  ];
+
+  keys.forEach(refreshOneStockPreviewV126);
+}
+
+function updateClock(){
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('th-TH',{hour12:false});
+
+  if(window.__latestMarketData && window.__latestMarketData.results){
+    AUTO_MARKET_KEYS.forEach(function(key){
+      updateMarketCard(key, window.__latestMarketData.results[key]);
+    });
+
+    MANUAL_STOCK_KEYS.forEach(function(key){
+      updateManualStockResultV120(
+        key,
+        window.__latestMarketData.results[key]
+      );
+    });
+
+    AUTO_VIP_KEYS.forEach(function(key){
+      updateVipResult(
+        key,
+        window.__latestMarketData.results[key]
+      );
+    });
+  }
+}
+const initialBoard = getBoardFromHash();
+
+if(!location.hash){
+  try{
+    history.replaceState(null, '', '#morning');
+  }catch(e){}
+}
+
+startBoardDateClockV137();
+renderSelectedBoard(initialBoard);
+updateClock();
+
+let liveSyncBusyV95=false;
+
+function bangkokMinuteNowV95(){
+  const parts=
+    new Intl.DateTimeFormat(
+      'en-GB',
+      {
+        timeZone:'Asia/Bangkok',
+        hour:'2-digit',
+        minute:'2-digit',
+        hourCycle:'h23'
+      }
+    ).formatToParts(new Date());
+
+  const m=
+    Object.fromEntries(
+      parts.map(function(p){
+        return [p.type,p.value];
+      })
+    );
+
+  return (
+    Number(m.hour)*60 +
+    Number(m.minute)
+  );
+}
+
+function drawDiffMinutesV95(draw){
+  const p=
+    String(draw||'')
+      .split(':')
+      .map(Number);
+
+  const drawMin=
+    Number(p[0]||0)*60 +
+    Number(p[1]||0);
+
+  let diff=
+    bangkokMinuteNowV95()-
+    drawMin;
+
+  if(diff < -720){
+    diff+=1440;
+  }
+
+  return diff;
+}
+
+function triggerNearDrawLiveSyncV95(){
+  if(liveSyncBusyV95) return;
+
+  const keys=
+    AUTO_MARKET_KEYS
+      .concat(AUTO_VIP_KEYS);
+
+  const due=[];
+
+  keys.forEach(function(key){
+    const item=
+      ITEMS.find(function(x){
+        return x.key===key;
+      });
+
+    if(!item) return;
+
+    const diff=
+      drawDiffMinutesV95(
+        item.draw
+      );
+
+    if(diff>=0 && diff<=15){
+      due.push(key);
+    }
+  });
+
+  if(!due.length) return;
+
+  liveSyncBusyV95=true;
+
+  Promise.all(
+    due.map(function(key){
+      return fetch(
+        '/api/live-sync?key='+
+        encodeURIComponent(key),
+        {
+          cache:'no-store'
+        }
+      )
+      .then(function(r){
+        return r.json();
+      })
+      .catch(function(){
+        return null;
+      });
+    })
+  )
+  .finally(function(){
+    liveSyncBusyV95=false;
+
+    try{
+      refreshMarketCards();
+    }catch(err){
+      console.error(
+        'refreshMarketCards',
+        err
+      );
+    }
+  });
+}
+
+setInterval(
+  triggerNearDrawLiveSyncV95,
+  10000
+);
+
+setInterval(updateClock, 1000);
+setInterval(refreshLiveMarketsV129, 20000);
+setInterval(refreshBlockedStockPreviewsV121, 300000);
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden){
+    refreshLiveMarketsV129();
+  }
+});
+setInterval(refreshMarketCards, 5000);
+
+function openAdminV89(){ window.location.href='https://livehuay.netlify.app/admin/'; }
+
+</script>
+<script id="luxe-ui-v154-js">
+/* ===== V154 LUXE GOLD UI: ฉากหลังเหรียญทอง + เอฟเฟกต์ตอนผลออก =====
+   เป็นส่วนตกแต่งล้วน ๆ ไม่แตะ iframe / ตำแหน่ง / ข้อมูลผล */
+(function(){
+  'use strict';
+  try{
+    var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ---------- ฉากหลัง ---------- */
+    var bg=document.createElement('div');
+    bg.id='luxeBg';
+    bg.setAttribute('aria-hidden','true');
+    bg.innerHTML='<div class="luxe-aurora a"></div><div class="luxe-aurora b"></div><div class="luxe-aurora c"></div>'+
+      '<div class="luxe-grid"></div><canvas></canvas><div class="luxe-vignette"></div>';
+    document.body.insertBefore(bg,document.body.firstChild);
+
+    /* ---------- เหรียญประดับส่วนหัว ---------- */
+    var header=document.querySelector('.header');
+    if(header){
+      var coin=function(x,y,s,d,delay){
+        return '<div class="luxe-float" style="left:'+x+'px;top:'+y+'px;animation-delay:'+delay+'s">'+
+          '<div class="luxe-coin" style="--s:'+s+'px;--d:'+d+'s">฿</div></div>';
+      };
+      var spark=function(x,y,delay){
+        return '<i class="luxe-spark" style="left:'+x+'px;top:'+y+'px;animation-delay:'+delay+'s"></i>';
+      };
+      var L=document.createElement('div');L.className='luxe-orn l';L.setAttribute('aria-hidden','true');
+      L.innerHTML=coin(8,34,58,4.6,0)+coin(84,10,36,3.4,-1.2)+coin(128,56,44,5.4,-2.4)+spark(70,62,0)+spark(180,22,.8)+spark(20,12,1.5);
+      var R=document.createElement('div');R.className='luxe-orn r';R.setAttribute('aria-hidden','true');
+      R.innerHTML=coin(160,30,58,5,-1)+coin(104,8,36,3.8,-2)+coin(52,54,44,4.4,-.4)+spark(140,70,.4)+spark(30,24,1.2)+spark(200,10,2);
+      header.appendChild(L);header.appendChild(R);
+    }
+
+    /* ---------- canvas: เหรียญทองลอย + ประกาย ---------- */
+    var cv=bg.querySelector('canvas'),ctx=cv.getContext('2d');
+    var W=0,H=0,DPR=1,coins=[],stars=[],bursts=[];
+
+    function makeSprite(glyph){
+      var s=96,c=document.createElement('canvas');c.width=c.height=s;
+      var g=c.getContext('2d'),r=s/2;
+      var grad=g.createRadialGradient(r*.62,r*.5,r*.05,r,r,r);
+      grad.addColorStop(0,'#fffbe3');grad.addColorStop(.32,'#ffe07a');grad.addColorStop(.68,'#f2aa00');grad.addColorStop(1,'#9c6200');
+      g.fillStyle=grad;g.beginPath();g.arc(r,r,r-1,0,Math.PI*2);g.fill();
+      g.lineWidth=4;g.strokeStyle='#fbd45c';g.beginPath();g.arc(r,r,r-4,0,Math.PI*2);g.stroke();
+      g.lineWidth=2;g.strokeStyle='#a86e00';g.beginPath();g.arc(r,r,r-9,0,Math.PI*2);g.stroke();
+      g.font='900 50px Anuphan,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
+      g.fillStyle='#fff3b0';g.fillText(glyph,r,r+5);
+      g.fillStyle='#8a5a00';g.fillText(glyph,r,r+3);
+      return c;
+    }
+    var edge=(function(){
+      var s=96,c=document.createElement('canvas');c.width=c.height=s;
+      var g=c.getContext('2d');g.fillStyle='#8a5600';g.beginPath();g.arc(s/2,s/2,s/2-1,0,Math.PI*2);g.fill();return c;
+    })();
+    var faces=[makeSprite('฿'),makeSprite('★')];
+
+    function rnd(a,b){return a+Math.random()*(b-a);}
+    function newCoin(top){
+      var z=Math.random();                       /* ความลึก 0 ไกล – 1 ใกล้ */
+      return {x:rnd(0,W),y:top?rnd(-H*.2,-30):rnd(0,H),r:10+z*16,z:z,
+        vy:14+z*30,sw:rnd(.3,1),swA:rnd(8,26),ph:rnd(0,6.28),sp:rnd(1.2,3.2)*(Math.random()<.5?-1:1),
+        tilt:rnd(-.5,.5),tv:rnd(-.25,.25),a:.22+z*.5,face:Math.random()<.7?0:1,t:rnd(0,10)};
+    }
+    function resize(){
+      DPR=Math.min(window.devicePixelRatio||1,1.5);
+      W=window.innerWidth;H=window.innerHeight;
+      cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      var n=Math.max(8,Math.min(26,Math.round(W*H/62000)));
+      while(coins.length<n)coins.push(newCoin(false));
+      coins.length=n;
+      var m=Math.max(10,Math.min(34,Math.round(W*H/42000)));
+      stars=[];for(var i=0;i<m;i++)stars.push({x:rnd(0,W),y:rnd(0,H),s:rnd(1.5,5),p:rnd(0,6.28),v:rnd(.6,1.8)});
+    }
+    function drawCoin(x,y,r,ph,tilt,a,face){
+      var c=Math.cos(ph),sx=Math.max(.06,Math.abs(c)),th=r*.16*Math.sin(ph);
+      ctx.save();ctx.translate(x,y);ctx.rotate(tilt);ctx.globalAlpha=a;
+      ctx.drawImage(edge,-r*sx+th,-r,r*2*sx,r*2);
+      ctx.drawImage(faces[c>=0?face:1-face],-r*sx,-r,r*2*sx,r*2);
+      if(sx>.75){ctx.globalAlpha=a*(sx-.75)*2.2;ctx.fillStyle='#fff';
+        ctx.beginPath();ctx.ellipse(-r*.3*sx,-r*.38,r*.26*sx,r*.12,-.6,0,Math.PI*2);ctx.fill();}
+      ctx.restore();
+    }
+    function drawStar(x,y,s,a){
+      ctx.globalAlpha=a;ctx.fillStyle='#ffe9a6';
+      ctx.beginPath();
+      ctx.moveTo(x,y-s);ctx.quadraticCurveTo(x,y,x+s,y);ctx.quadraticCurveTo(x,y,x,y+s);
+      ctx.quadraticCurveTo(x,y,x-s,y);ctx.quadraticCurveTo(x,y,x,y-s);ctx.fill();
+    }
+    function frame(dt,now){
+      ctx.clearRect(0,0,W,H);
+      var i,o;
+      for(i=0;i<stars.length;i++){o=stars[i];
+        drawStar(o.x,o.y,o.s,.15+.55*Math.abs(Math.sin(o.p+now*.001*o.v)));}
+      for(i=0;i<coins.length;i++){o=coins[i];
+        o.t+=dt;o.y+=o.vy*dt;o.ph+=o.sp*dt;o.tilt+=o.tv*dt;
+        if(o.y-o.r>H){coins[i]=o=newCoin(true);}
+        drawCoin(o.x+Math.sin(o.t*o.sw)*o.swA,o.y,o.r,o.ph,o.tilt,o.a,o.face);}
+      for(i=bursts.length-1;i>=0;i--){o=bursts[i];
+        o.life-=dt;if(o.life<=0){bursts.splice(i,1);continue;}
+        o.vy+=620*dt;o.x+=o.vx*dt;o.y+=o.vy*dt;o.ph+=o.sp*dt;
+        drawCoin(o.x,o.y,o.r,o.ph,o.ph*.3,Math.min(1,o.life*1.6),0);}
+      ctx.globalAlpha=1;
+    }
+    var last=0,acc=0,running=false;
+    function loop(now){
+      if(!running)return;
+      requestAnimationFrame(loop);
+      var d=now-last;
+      if(d<32)return;                             /* ~30fps ประหยัดเครื่องตอนไลฟ์ */
+      last=now;frame(Math.min(d,80)/1000,now);
+    }
+    function start(){if(running||reduce||document.hidden)return;running=true;last=performance.now();requestAnimationFrame(loop);}
+    function stop(){running=false;}
+    window.addEventListener('resize',function(){resize();if(reduce)frame(0,0);});
+    document.addEventListener('visibilitychange',function(){document.hidden?stop():start();});
+    resize();
+    if(reduce)frame(0,0);else start();
+    if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){faces=[makeSprite('฿'),makeSprite('★')];});}
+
+    /* ---------- เหรียญพุ่งตอนผลออก ---------- */
+    function burstAt(el){
+      if(reduce)return;
+      var b=el.getBoundingClientRect();
+      if(b.bottom<0||b.top>H)return;
+      var cx=b.left+b.width/2,cy=b.top+b.height/2;
+      for(var i=0;i<16;i++){
+        var ang=rnd(-Math.PI*.95,-Math.PI*.05),sp=rnd(180,460);
+        bursts.push({x:cx+rnd(-b.width*.3,b.width*.3),y:cy,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,
+          r:rnd(7,13),ph:rnd(0,6.28),sp:rnd(6,12),life:rnd(1.1,1.8)});
+      }
+    }
+
+    var board=document.getElementById('board');
+    if(board&&window.MutationObserver){
+      var seen=new WeakMap(),lastIds='',enterTimer=0;
+      var hasDigit=function(s){return /\d/.test(s||'');};
+      var scan=function(){
+        var ids=Array.prototype.map.call(board.children,function(c){return c.id;}).join(',');
+        if(ids!==lastIds){
+          lastIds=ids;
+          board.classList.add('luxe-enter');
+          clearTimeout(enterTimer);
+          enterTimer=setTimeout(function(){board.classList.remove('luxe-enter');},1500);
+        }
+        var now=Date.now(),list=board.querySelectorAll('.result');
+        for(var i=0;i<list.length;i++){
+          var el=list[i],txt=el.textContent,rec=seen.get(el);
+          if(!rec){seen.set(el,{t:now,v:txt});continue;}
+          if(rec.v===txt)continue;
+          var was=hasDigit(rec.v);rec.v=txt;
+          /* เล่นเฉพาะตอนผลเพิ่งออกจริง ไม่เล่นตอนโหลดหน้า/สลับกระดาน */
+          if(!was&&hasDigit(txt)&&now-rec.t>6000){
+            el.classList.remove('luxe-pop');void el.offsetWidth;el.classList.add('luxe-pop');
+            burstAt(el);
+          }
+        }
+      };
+      var pending=false;
+      new MutationObserver(function(){
+        if(pending)return;pending=true;
+        requestAnimationFrame(function(){pending=false;scan();});
+      }).observe(board,{childList:true,subtree:true,characterData:true});
+      scan();
+    }
+  }catch(err){
+    if(window.console)console.warn('[luxe-ui]',err);
+  }
+})();
+</script>
+<script id="dock-history-v155">
+/* ===== V155: ประวัติเพลงที่เปิด + ซ่อนแบบหายไปเลย ===== */
+(function(){
+  'use strict';
+  var KEY='livehuay_media_history_v155',MAX=30;
+  var dock=document.getElementById('mediaDockV142');
+  if(!dock) return;
+  function read(){try{var a=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+  function write(a){try{localStorage.setItem(KEY,JSON.stringify(a.slice(0,MAX)));}catch(e){}}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function host(u){try{return new URL(u).hostname.replace(/^www\./,'');}catch(e){return u;}}
+  function ytId(u){try{var y=youtubeInfoV142(u);return y&&(y.videoId||y.id||y.v)||'';}catch(e){return '';}}
+  function ytIdFallback(u){var m=String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);return m?m[1]:'';}
+
+  /* ---------- ปุ่มบนหัวเครื่องเล่น ---------- */
+  var ctl=dock.querySelector('.media-dock-controls-v142');
+  var minBtn=document.getElementById('mediaDockMinBtnV142');
+  var histBtn=document.createElement('button');
+  histBtn.type='button';histBtn.className='dock-hist-btn';histBtn.title='ประวัติเพลงที่เปิด';histBtn.textContent='🕘';
+  var hideBtn=document.createElement('button');
+  hideBtn.type='button';hideBtn.className='dock-hide-btn';hideBtn.title='ซ่อนให้หายไป (เสียงยังเล่นต่อ)';hideBtn.textContent='🙈';
+  ctl.insertBefore(histBtn,ctl.firstChild);
+  ctl.insertBefore(hideBtn,minBtn);
+
+  /* ---------- แผงประวัติ ---------- */
+  var panel=document.createElement('div');
+  panel.className='dock-hist-v155';
+  dock.insertBefore(panel,dock.querySelector('.media-dock-hint-v142'));
+
+  function render(){
+    var list=read(),cur=(document.getElementById('mediaDockUrlV142')||{}).value||'';
+    if(!list.length){panel.innerHTML='<div class="dock-hist-empty-v155">ยังไม่มีประวัติ — เปิดเพลง/ลิงก์แล้วจะมาอยู่ที่นี่</div>';return;}
+    panel.innerHTML=list.map(function(it,i){
+      var id=ytIdFallback(it.url);
+      var thumb=id?'<img loading="lazy" alt="" src="https://i.ytimg.com/vi/'+id+'/default.jpg">':'<span class="dock-hist-ico-v155">🌐</span>';
+      return '<div class="dock-hist-row-v155'+(it.url===cur?' now':'')+'">'+
+        '<button type="button" class="dock-hist-open-v155" data-i="'+i+'" title="'+esc(it.url)+'">'+thumb+
+        '<span class="dock-hist-txt-v155"><b>'+esc(it.title||host(it.url))+'</b><small>'+esc(it.author||host(it.url))+'</small></span></button>'+
+        '<button type="button" class="dock-hist-del-v155" data-d="'+i+'" title="ลบออกจากประวัติ">✕</button></div>';
+    }).join('')+'<button type="button" class="dock-hist-clear-v155" data-clear="1">ล้างประวัติทั้งหมด</button>';
+  }
+  panel.addEventListener('click',function(ev){
+    var t=ev.target.closest('button');if(!t)return;
+    var list=read();
+    if(t.dataset.i!==undefined){var it=list[+t.dataset.i];if(it)window.loadMediaDockUrlV142(it.url);}
+    else if(t.dataset.d!==undefined){list.splice(+t.dataset.d,1);write(list);render();}
+    else if(t.dataset.clear){if(confirm('ล้างประวัติเพลงทั้งหมด?')){write([]);render();}}
+  });
+  histBtn.addEventListener('click',function(){
+    dock.classList.toggle('show-hist');
+    if(dock.classList.contains('show-hist'))render();
+  });
+
+  /* ---------- บันทึกประวัติ (ครอบฟังก์ชันเปิดเพลงเดิม ไม่แก้ของเดิม) ---------- */
+  var origLoad=window.loadMediaDockUrlV142;
+  window.loadMediaDockUrlV142=function(forceUrl){
+    var input=document.getElementById('mediaDockUrlV142');
+    var url=String((typeof forceUrl==='string'&&forceUrl)||(input&&input.value)||'').trim();
+    var r=origLoad.apply(this,arguments);
+    if(/^https?:\/\//i.test(url)){
+      var list=read(),old=list.filter(function(x){return x.url===url;})[0];
+      list=list.filter(function(x){return x.url!==url;});
+      var entry={url:url,title:old&&old.title||'',author:old&&old.author||'',t:Date.now()};
+      list.unshift(entry);write(list);
+      if(!entry.title&&ytIdFallback(url)){
+        fetch('https://www.youtube.com/oembed?format=json&url='+encodeURIComponent(url))
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(j){
+            if(!j||!j.title)return;
+            var l=read();l.forEach(function(x){if(x.url===url){x.title=j.title;x.author=j.author_name||'';}});write(l);
+            if(dock.classList.contains('show-hist'))render();
+          }).catch(function(){});
+      }
+      if(dock.classList.contains('show-hist'))render();
+    }
+    return r;
+  };
+
+  /* ---------- ซ่อนแบบหายไปเลย: เสียงยังเล่นต่อ เปิดกลับจากเมนู ---------- */
+  var menuBtn=document.querySelector('#topMenu button[onclick*="showMediaDockV142"]');
+  var menuLabel=menuBtn?menuBtn.textContent:'';
+  function badge(on){
+    if(!menuBtn)return;
+    menuBtn.textContent=menuLabel;
+    if(on){var s=document.createElement('span');s.className='dock-playing-badge-v155';s.textContent='กำลังเล่น';menuBtn.appendChild(s);}
+  }
+  hideBtn.addEventListener('click',function(){
+    var f=document.getElementById('mediaDockFrameV142');
+    if(!f||!f.src||f.src==='about:blank'||f.getAttribute('src')==='about:blank'){
+      /* ยังไม่ได้เปิดอะไร = ซ่อนเฉย ๆ ไม่ต้องค้างเงียบ */
+      dock.classList.add('hidden');return;
+    }
+    dock.classList.remove('show-hist');
+    dock.classList.add('stealth');badge(true);
+  });
+  /* ลิงก์เริ่มต้น: เปิดเครื่องเล่นครั้งแรกของหน้า (ยังไม่มีเพลง) จะเล่นลิงก์นี้ */
+  var DEFAULT_URL='https://www.youtube.com/watch?v=OKTgK6AUpmw&list=RDOKTgK6AUpmw&start_radio=1';
+  var defInput=document.getElementById('mediaDockUrlV142');
+  function setDefInput(){var i=document.getElementById('mediaDockUrlV142'),f=document.getElementById('mediaDockFrameV142');if(i&&(!f||!f.getAttribute('src')||f.getAttribute('src')==='about:blank'))i.value=DEFAULT_URL;}
+  setDefInput();document.addEventListener('DOMContentLoaded',setDefInput);window.addEventListener('load',setDefInput);
+  var origShow=window.showMediaDockV142;
+  window.showMediaDockV142=function(url){
+    dock.classList.remove('stealth');badge(false);
+    var fr=document.getElementById('mediaDockFrameV142');
+    var idle=!fr||!fr.getAttribute('src')||fr.getAttribute('src')==='about:blank';
+    var r=origShow.apply(this,arguments);
+    if(idle&&!url)window.loadMediaDockUrlV142(DEFAULT_URL);
+    return r;
+  };
+  var origClose=window.closeMediaDockV142;
+  window.closeMediaDockV142=function(){
+    dock.classList.remove('stealth','show-hist');badge(false);
+    return origClose.apply(this,arguments);
+  };
+})();
+</script>
+<script id="drawing-v156">
+/* ===== V156: ช่วง 5 นาทีก่อนผลออก (จนถึงผลขึ้น หรือไม่เกิน 30 นาทีหลังเวลา) ===== */
+(function(){
+  'use strict';
+  var BEFORE=5,AFTER=30;
+  var fmt=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  function nowSec(){
+    if(typeof window.__luxeFakeSec==='number')return window.__luxeFakeSec;
+    var p=fmt.formatToParts(new Date()),v={};p.forEach(function(x){v[x.type]=x.value;});
+    return (+v.hour%24)*3600+(+v.minute)*60+(+v.second);
+  }
+  function tick(){
+    try{
+      var items=window.ITEMS||(typeof ITEMS!=='undefined'?ITEMS:null);
+      if(!items)return;
+      var now=nowSec();
+      items.forEach(function(it){
+        var m=/^(\d{1,2}):(\d{2})/.exec(it.draw||'');if(!m)return;
+        var draw=(+m[1])*3600+(+m[2])*60;
+        var d=((draw-now)%86400+86400)%86400;          /* วินาทีที่เหลือ */
+        var inWin=d<=BEFORE*60 || (86400-d)<=AFTER*60;  /* ก่อน 5 นาที หรือเลยมาไม่เกิน 30 นาที */
+        var card=document.getElementById('card-'+it.key);if(!card)return;
+        var closed=card.classList.contains('stock-is-closed');
+        card.querySelectorAll('.result').forEach(function(r){
+          var empty=!/\d/.test(r.textContent||'');
+          var on=inWin&&empty&&!closed;
+          if(r.classList.contains('luxe-drawing')!==on)r.classList.toggle('luxe-drawing',on);
+          if(on&&r.classList.contains('lao-result-four')!==r.classList.contains('luxe-big'))r.classList.toggle('luxe-big',r.classList.contains('lao-result-four'));
+        });
+      });
+    }catch(e){}
+  }
+  setInterval(tick,1000);tick();
+  window.__luxeDrawingTick=tick;
+})();
+</script>
+<style id="guide-v157-css">
+/* ===== V157 แนวทางหวย: กรอบลอยลากได้ ===== */
+#guideV157{position:fixed;z-index:9000;left:24px;top:120px;width:320px;max-width:calc(100vw - 16px);
+  font-family:Anuphan,Kanit,sans-serif;color:#fff7dc;border-radius:18px;overflow:hidden;
+  background:linear-gradient(160deg,#3a0a0a 0%,#1d0505 60%,#2a1200 100%);
+  border:2px solid #f2c14e;box-shadow:0 18px 40px rgba(0,0,0,.55),0 0 0 1px rgba(255,220,120,.25) inset,0 0 26px rgba(255,190,40,.25);
+  user-select:none;touch-action:none}
+#guideV157[hidden]{display:none}
+#guideV157 .g-head{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:grab;
+  background:linear-gradient(90deg,#b8860b,#ffd76a 50%,#b8860b);color:#3a1700;font-weight:800}
+#guideV157.dragging .g-head{cursor:grabbing}
+#guideV157 .g-head .g-title{flex:1;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#guideV157 .g-head button{border:0;background:rgba(58,23,0,.15);color:#3a1700;border-radius:8px;width:28px;height:26px;
+  font-size:14px;cursor:pointer;padding:0;line-height:26px}
+#guideV157 .g-head button:hover{background:rgba(58,23,0,.3)}
+#guideV157.mini .g-body{display:none}
+#guideV157 .g-body{padding:10px 12px 12px}
+#guideV157 .g-row{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+#guideV157 select,#guideV157 input.g-name{font:inherit;font-size:13px;border-radius:9px;border:1px solid #c99a2e;
+  background:#120303;color:#ffe9a6;padding:5px 8px;min-width:0}
+#guideV157 select{flex:1}
+#guideV157 label.g-auto{font-size:11px;display:flex;align-items:center;gap:3px;white-space:nowrap;color:#ffd76a}
+#guideV157 .g-card{border-radius:14px;padding:10px;text-align:center;
+  background:radial-gradient(circle at 50% 0,rgba(255,215,106,.18),transparent 70%),rgba(0,0,0,.28);
+  border:1px solid rgba(242,193,78,.45)}
+#guideV157 input.g-name{width:100%;text-align:center;font-size:20px;font-weight:800;background:transparent;border:1px dashed transparent;
+  color:#ffd76a;text-shadow:0 2px 0 #5a2a00}
+#guideV157 input.g-name:hover,#guideV157 input.g-name:focus{border-color:#c99a2e;outline:0;background:rgba(0,0,0,.25)}
+#guideV157 .g-round{font-size:12px;color:#f7d9a0;opacity:.9;margin:2px 0 8px}
+#guideV157 .g-sec{display:grid;grid-template-columns:62px 1fr;align-items:center;gap:6px;margin:6px 0;text-align:left}
+#guideV157 .g-lab{font-size:12px;font-weight:800;color:#3a1700;background:linear-gradient(#ffe48a,#d9a521);
+  border-radius:8px;padding:4px 0;text-align:center}
+#guideV157 .g-nums{display:flex;flex-wrap:wrap;gap:5px}
+#guideV157 .g-n{min-width:30px;padding:3px 7px;border-radius:9px;font-weight:800;font-size:18px;text-align:center;
+  background:linear-gradient(#fff6d6,#ffd76a);color:#7a1010;box-shadow:0 2px 0 #8a5a00;font-variant-numeric:tabular-nums}
+#guideV157 .g-n.big{font-size:24px;min-width:40px}
+#guideV157 .g-n.red{background:linear-gradient(#ff6b6b,#b30000);color:#fff;box-shadow:0 2px 0 #5a0000}
+#guideV157 .g-sub{font-size:11px;color:#f7d9a0;opacity:.85;width:100%}
+#guideV157.rolling .g-n{animation:gRoll .12s linear infinite}
+@keyframes gRoll{0%{transform:translateY(-2px)}50%{transform:translateY(2px)}100%{transform:translateY(-2px)}}
+#guideV157 .g-btns{display:flex;justify-content:center;margin-top:10px}
+#guideV157 .g-btns button{width:56px;height:56px;border:0;border-radius:50%;padding:0;font-size:28px;line-height:56px;cursor:pointer}
+#guideV157.rolling .g-roll{animation:gDice .5s linear infinite}
+@keyframes gDice{to{transform:rotate(360deg)}}
+#guideV157 .g-roll{background:linear-gradient(#ff5a5a,#b30000);color:#fff;box-shadow:0 3px 0 #5a0000}
+#guideV157 .g-btns button:active{transform:translateY(2px);box-shadow:none}
+#guideV157 .g-note{font-size:10px;opacity:.6;text-align:center;margin-top:6px}
+</style>
+<script id="guide-v157">
+/* ===== V157 แนวทางหวย: วิ่ง / รูด / 2 ตัว / 3 ตัว (สุ่ม) — กรอบลอยลากได้ เปลี่ยนชื่อหวยได้ ตามรอบ =====
+   เก็บทุกอย่างใน localStorage ของเครื่องนี้ ไม่แตะ iframe / ผลหวย / ตั้งค่าเซิร์ฟเวอร์ */
+(function(){
+  'use strict';
+  var LS='livehuay_guide_v157';
+  function load(){try{return JSON.parse(localStorage.getItem(LS))||{};}catch(e){return {};}}
+  function save(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
+  var S=load();S.names=S.names||{};S.sets=S.sets||{};if(S.auto===undefined)S.auto=true;
+
+  function items(){try{return (typeof ITEMS!=='undefined'&&ITEMS)||[];}catch(e){return [];}}
+  function bkk(){
+    var p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})
+      .formatToParts(new Date()).forEach(function(x){p[x.type]=x.value;});
+    return {date:p.year+'-'+p.month+'-'+p.day,min:(+p.hour%24)*60+(+p.minute),dmy:p.day+'/'+p.month+'/'+(+p.year+543)};
+  }
+  function mins(t){var m=/^(\d{1,2}):(\d{2})/.exec(t||'');return m?(+m[1])*60+(+m[2]):-1;}
+  function nameOf(it){return S.names[it.key]||it.name||it.key;}
+  /* หวยรอบถัดไป: เวลาออกผลยังไม่ผ่าน (เผื่อ 5 นาทีหลังออก) ถ้าผ่านหมดแล้วเอาตัวแรก */
+  function nextItem(){
+    var list=items().filter(function(i){return mins(i.draw)>=0;}),now=bkk().min,best=null;
+    list.forEach(function(i){var d=mins(i.draw);if(d+5>=now&&(!best||d<mins(best.draw)))best=i;});
+    return best||list.slice().sort(function(a,b){return mins(a.draw)-mins(b.draw);})[0]||items()[0];
+  }
+  function pad(n,l){n=String(n);while(n.length<l)n='0'+n;return n;}
+  function ri(n){return Math.floor(Math.random()*n);}
+  function uniq(n,gen){var out=[],g=0;while(out.length<n&&g++<500){var v=gen();if(out.indexOf(v)<0)out.push(v);}return out;}
+  /* สร้างชุดแนวทาง: เลข 2/3 ตัวผูกกับเลขวิ่ง ให้ดูเป็นแนวเดียวกัน */
+  function generate(){
+    var run=uniq(2,function(){return String(ri(10));});
+    var rood=run[0];
+    var two=uniq(6,function(){var d=run[ri(2)],o=String(ri(10));return ri(2)?d+o:o+d;});
+    var three=uniq(4,function(){var x=[run[ri(2)],String(ri(10)),String(ri(10))];
+      for(var i=2;i>0;i--){var j=ri(i+1),t=x[i];x[i]=x[j];x[j]=t;}return x.join('');});
+    return {run:run,rood:rood,two:two,three:three,t:Date.now()};
+  }
+  function setKey(it){return bkk().date+'|'+it.key;}
+  function getSet(it,force){
+    var k=setKey(it);
+    if(force||!S.sets[k])S.sets[k]=generate();
+    /* เก็บแค่ของ 3 วันล่าสุด */
+    var today=new Date(bkk().date);Object.keys(S.sets).forEach(function(x){if(today-new Date(x.slice(0,10))>3*864e5)delete S.sets[x];});
+    save();return S.sets[k];
+  }
+
+  /* ---------- UI ---------- */
+  var box=document.createElement('div');box.id='guideV157';box.hidden=true;
+  box.innerHTML='<div class="g-head"><span>🔮</span><span class="g-title">แนวทางหวย</span>'+
+    '<button type="button" class="g-min" title="ย่อ/ขยาย">▁</button><button type="button" class="g-x" title="ปิด">✕</button></div>'+
+    '<div class="g-body">'+
+      '<div class="g-row"><select class="g-sel" title="เลือกหวย"></select>'+
+      '<label class="g-auto" title="เปลี่ยนเป็นหวยรอบถัดไปให้เองเมื่อเลยเวลาออกผล"><input type="checkbox" class="g-autochk">ตามรอบ</label></div>'+
+      '<div class="g-card">'+
+        '<input class="g-name" maxlength="40" title="แตะเพื่อเปลี่ยนชื่อหวย" spellcheck="false">'+
+        '<div class="g-round"></div>'+
+        '<div class="g-sec"><div class="g-lab">วิ่ง</div><div class="g-nums g-run"></div></div>'+
+        '<div class="g-sec"><div class="g-lab">รูด</div><div class="g-nums g-rood"></div></div>'+
+        '<div class="g-sec"><div class="g-lab">2 ตัว</div><div class="g-nums g-two"></div></div>'+
+        '<div class="g-sec"><div class="g-lab">3 ตัว</div><div class="g-nums g-three"></div></div>'+
+      '</div>'+
+      '<div class="g-btns"><button type="button" class="g-roll" title="สุ่ม" aria-label="สุ่ม">🎲</button></div>'+
+      
+    '</div>';
+  document.body.appendChild(box);
+  var $=function(s){return box.querySelector(s);};
+  var sel=$('.g-sel'),nameIn=$('.g-name'),autoChk=$('.g-autochk');
+  autoChk.checked=!!S.auto;
+  var cur=null;
+
+  function nums(arr,cls){return arr.map(function(n){return '<span class="g-n'+(cls?' '+cls:'')+'">'+n+'</span>';}).join('');}
+  function fillSelect(){
+    var list=items(),v=cur&&cur.key;
+    sel.innerHTML=list.map(function(i){return '<option value="'+i.key+'">'+(i.draw?i.draw+' • ':'')+nameOf(i).replace(/</g,'&lt;')+'</option>';}).join('');
+    if(v&&list.some(function(i){return i.key===v;}))sel.value=v;
+  }
+  function render(set){
+    if(!cur)return;
+    if(document.activeElement!==nameIn)nameIn.value=nameOf(cur);
+    $('.g-title').textContent='แนวทาง • '+nameOf(cur);
+    $('.g-round').textContent='งวดวันที่ '+bkk().dmy+(cur.draw?' • ออกผล '+cur.draw+' น.':'');
+    set=set||getSet(cur);
+    $('.g-run').innerHTML=nums(set.run,'big red');
+    $('.g-rood').innerHTML=nums([set.rood],'big')+'<span class="g-sub">รูดหน้า '+set.rood+'0-'+set.rood+'9 • รูดหลัง 0'+set.rood+'-9'+set.rood+'</span>';
+    $('.g-two').innerHTML=nums(set.two);
+    $('.g-three').innerHTML=nums(set.three);
+  }
+  function pick(it){if(!it)return;cur=it;S.key=it.key;save();fillSelect();sel.value=it.key;render();}
+  function pickInitial(){
+    var list=items(),it=null;
+    if(!S.auto&&S.key)it=list.filter(function(i){return i.key===S.key;})[0];
+    pick(it||nextItem());
+  }
+
+  sel.addEventListener('change',function(){
+    var it=items().filter(function(i){return i.key===sel.value;})[0];
+    S.auto=false;autoChk.checked=false;pick(it);
+  });
+  autoChk.addEventListener('change',function(){S.auto=autoChk.checked;save();if(S.auto)pick(nextItem());});
+  nameIn.addEventListener('input',function(){
+    if(!cur)return;var v=nameIn.value.trim();
+    if(v&&v!==cur.name)S.names[cur.key]=v;else delete S.names[cur.key];
+    save();$('.g-title').textContent='แนวทาง • '+nameOf(cur);
+    var o=sel.querySelector('option[value="'+cur.key+'"]');if(o)o.textContent=(cur.draw?cur.draw+' • ':'')+nameOf(cur);
+  });
+  nameIn.addEventListener('blur',function(){if(cur&&!nameIn.value.trim())nameIn.value=nameOf(cur);});
+  nameIn.addEventListener('keydown',function(e){if(e.key==='Enter')nameIn.blur();});
+
+  var rolling=false;
+  $('.g-roll').addEventListener('click',function(){
+    if(!cur||rolling)return;rolling=true;box.classList.add('rolling');
+    var n=0,iv=setInterval(function(){render(generate());if(++n>=10){clearInterval(iv);box.classList.remove('rolling');rolling=false;render(getSet(cur,true));}},70);
+  });
+  $('.g-min').addEventListener('click',function(){box.classList.toggle('mini');S.mini=box.classList.contains('mini');save();clamp();});
+  $('.g-x').addEventListener('click',function(){box.hidden=true;S.open=false;save();});
+
+  /* ---------- ลาก ---------- */
+  function clamp(){
+    var r=box.getBoundingClientRect(),W=window.innerWidth,H=window.innerHeight;
+    var x=Math.min(Math.max(4,r.left),Math.max(4,W-r.width-4)),y=Math.min(Math.max(4,r.top),Math.max(4,H-40));
+    box.style.left=x+'px';box.style.top=y+'px';
+  }
+  var drag=null;
+  $('.g-head').addEventListener('pointerdown',function(e){
+    if(e.target.closest('button'))return;
+    var r=box.getBoundingClientRect();drag={dx:e.clientX-r.left,dy:e.clientY-r.top,id:e.pointerId};
+    box.classList.add('dragging');try{this.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();
+  });
+  $('.g-head').addEventListener('pointermove',function(e){
+    if(!drag||e.pointerId!==drag.id)return;
+    box.style.left=(e.clientX-drag.dx)+'px';box.style.top=(e.clientY-drag.dy)+'px';clamp();
+  });
+  function end(e){if(!drag)return;drag=null;box.classList.remove('dragging');clamp();
+    S.pos={x:parseInt(box.style.left,10),y:parseInt(box.style.top,10)};save();}
+  $('.g-head').addEventListener('pointerup',end);$('.g-head').addEventListener('pointercancel',end);
+  window.addEventListener('resize',function(){if(!box.hidden)clamp();});
+  /* V158: แก้ชื่อ/สุ่มในแถบอื่น → แถบนี้อัปเดตตาม */
+  window.addEventListener('storage',function(e){if(e.key!==LS)return;var n=load();S.names=n.names||{};S.sets=n.sets||{};S.auto=n.auto!==undefined?n.auto:S.auto;if(!S.auto||!cur){var k=n.key;var it=items().filter(function(i){return i.key===k;})[0];if(it&&!S.auto)cur=it;}autoChk.checked=!!S.auto;if(cur){fillSelect();sel.value=cur.key;render();}});
+
+  window.showGuideV157=function(){
+    box.hidden=false;S.open=true;save();
+    if(S.pos){box.style.left=S.pos.x+'px';box.style.top=S.pos.y+'px';}
+    else if(window.innerWidth<600){box.style.left='8px';box.style.top='90px';}
+    box.classList.toggle('mini',!!S.mini);
+    pickInitial();clamp();
+  };
+
+  /* สลับกระดาน → รายชื่อหวยเปลี่ยนตามรอบ */
+  if(typeof window.goBoard==='function'){
+    var og=window.goBoard;
+    window.goBoard=function(){var r=og.apply(this,arguments);
+      setTimeout(function(){if(!box.hidden){var k=cur&&cur.key;var it=items().filter(function(i){return i.key===k;})[0];
+        if(S.auto||!it)pick(nextItem());else pick(it);}},50);return r;};
+  }
+  /* ตามรอบอัตโนมัติ: เช็คทุก 30 วิ */
+  setInterval(function(){if(box.hidden||!S.auto||!cur)return;var n=nextItem();if(n&&n.key!==cur.key)pick(n);else render();},30000);
+
+  /* เพิ่มปุ่มในเมนู */
+  var anchor=document.querySelector('#topMenu button[onclick^="showMediaDockV142"]');
+  if(anchor){var b=document.createElement('button');b.type='button';b.textContent='🔮 แนวทางหวย (สุ่ม)';
+    b.addEventListener('click',function(){window.showGuideV157();if(typeof closeTopMenu==='function')closeTopMenu();});
+    anchor.parentNode.insertBefore(b,anchor.nextSibling);}
+
+  if(S.open)setTimeout(window.showGuideV157,300);
+})();
+</script>
+<script id="tab-sync-v158">
+/* ===== V158 ซิงก์ทุกแถบ: แก้/บันทึกที่แถบไหน แถบอื่นที่เปิดอยู่อัปเดตเอง =====
+   - แถบในเบราว์เซอร์เดียวกัน: แจ้งทันทีผ่าน BroadcastChannel
+   - คนละเบราว์เซอร์/คนละเครื่อง (เช่น OBS): เช็ค /api/settings ทุก 15 วิ
+   อัปเดตเฉพาะหวยที่ค่าที่บันทึกเปลี่ยนจริง ไม่ทับงานที่กำลังปรับค้างในแถบนั้น */
+(function(){
+  'use strict';
+  var bc=null;try{bc=new BroadcastChannel('livehuay_sync_v158');}catch(e){}
+  var last=null,busy=false;
+  function J(v){try{return JSON.stringify(v===undefined?null:v);}catch(e){return '';}}
+  function snap(saved){var o={};Object.keys(saved||{}).forEach(function(k){o[k]=J(saved[k]);});return o;}
+  function itemsNow(){try{return ITEMS||[];}catch(e){return [];}}
+
+  function applyKey(item,saved){
+    var key=item.key,s=saved[key];
+    if(s&&(!item.layoutVersion||s._layoutVersion===item.layoutVersion)){
+      state[key]=Object.assign({},deepCopy(item),s);
+      if(!Array.isArray(state[key].boxes))state[key].boxes=deepCopy(item.boxes);
+    }else{
+      state[key]=deepCopy(item);
+    }
+    if(item.mirrorSettingsKey){
+      var mu=String((saved[item.mirrorSettingsKey]||{}).liveUrl||'').trim();
+      if(/^https?:\/\//i.test(mu))state[key].url=mu;
+    }
+    var su=(saved.market_live_urls_v129||{})[key];
+    if(su&&/^https?:\/\//i.test(String(su)))state[key].url=String(su).trim();
+    applyAll(key);
+  }
+
+  function sync(){
+    if(busy||typeof serverLoaded==='undefined'||!serverLoaded)return;
+    busy=true;
+    fetch('/api/settings',{cache:'no-store'}).then(function(r){return r.json();}).then(function(res){
+      var saved=(res&&res.settings)||{},now=snap(saved);
+      if(!last){last=now;return;}
+      var changed=function(k){return (now[k]||'')!==(last[k]||'');};
+      var n=0;
+      if(changed('site_theme')&&typeof applySiteThemeV112==='function'){applySiteThemeV112(saved.site_theme||{});n++;}
+      if(changed('site_messages_v129')&&typeof applySiteMessagesV129==='function'){applySiteMessagesV129(saved.site_messages_v129||{});n++;}
+      var urlsChanged=changed('market_live_urls_v129');
+      itemsNow().forEach(function(item){
+        if(changed(item.key)||urlsChanged||(item.mirrorSettingsKey&&changed(item.mirrorSettingsKey))){
+          try{applyKey(item,saved);n++;}catch(e){console.warn('[sync]',item.key,e);}
+        }
+      });
+      last=now;
+      if(n&&typeof showSaveStatus==='function')showSaveStatus('อัปเดตจากแถบอื่นแล้ว',true);
+    }).catch(function(){}).then(function(){busy=false;});
+  }
+  window.syncSettingsV158=sync;
+
+  /* จับการบันทึก/รีเซ็ตในแถบนี้ → แจ้งแถบอื่น */
+  var of=window.fetch;
+  window.fetch=function(input,init){
+    var p=of.apply(this,arguments);
+    try{
+      var url=typeof input==='string'?input:(input&&input.url)||'';
+      var m=String((init&&init.method)||(input&&input.method)||'GET').toUpperCase();
+      if(/\/api\/settings/.test(url)&&m!=='GET'){
+        p.then(function(r){if(r&&r.ok){
+          /* แถบนี้รู้ค่าใหม่แล้ว: รีเฟรช snapshot เงียบ ๆ แล้วแจ้งแถบอื่น */
+          setTimeout(function(){
+            of('/api/settings',{cache:'no-store'}).then(function(x){return x.json();}).then(function(res){last=snap((res&&res.settings)||{});}).catch(function(){});
+            if(bc)bc.postMessage({t:'settings',at:Date.now()});
+            try{localStorage.setItem('livehuay_sync_v158',String(Date.now()));}catch(e){}
+          },300);
+        }}).catch(function(){});
+      }
+    }catch(e){}
+    return p;
+  };
+
+  if(bc)bc.onmessage=function(e){if(e.data&&e.data.t==='settings')sync();};
+  window.addEventListener('storage',function(e){if(e.key==='livehuay_sync_v158')sync();});
+  /* สลับกระดาน → ตั้ง snapshot ใหม่ */
+  if(typeof window.goBoard==='function'){var og=window.goBoard;window.goBoard=function(){var r=og.apply(this,arguments);last=null;setTimeout(sync,800);return r;};}
+  setInterval(sync,15000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)sync();});
+  /* snapshot แรกหลังโหลดค่าเสร็จ */
+  var w=setInterval(function(){if(typeof serverLoaded!=='undefined'&&serverLoaded){clearInterval(w);sync();}},500);
+})();
+</script>
+<script id="remote-recv-v159">
+/* ===== V159 รีโมท: หน้าหลัก (หน้าไลฟ์) รับคำสั่งจากหน้า /remote/ =====
+   เบราว์เซอร์เดียวกัน: ทันที (BroadcastChannel) • คนละเครื่อง: เช็ค /api/settings ทุก 4 วิ
+   คำสั่งเก่าก่อนเปิดหน้าไม่ถูกเล่นซ้ำ */
+(function(){
+  'use strict';
+  var KEY='remote_cmds_v159',done={},lastId=null,busy=false;
+  var LOADED=Date.now()-1500;
+  function setFlag(cur,want,fn){if(!!cur!==!!want&&typeof fn==='function')fn();}
+  function run(c){
+    if(!c||!c.id||done[c.id])return;done[c.id]=1;
+    var v=c.v;
+    try{
+      switch(c.a){
+        case 'board':goBoard(String(v));if(typeof closeTopMenu==='function')closeTopMenu();break;
+        case 'results':setFlag(resultsVisible,v,toggleResults);break;
+        case 'vip':setFlag(vipNoteVisible,v,toggleVipNote);break;
+        case 'auto':setFlag(autoNoteVisible,v,toggleAutoNote);break;
+        case 'boxes':setFlag(boxesVisible,v,toggleBoxes);break;
+        case 'dock':
+          /* V160: สั่งจากหลังบ้าน = เล่นเสียงอย่างเดียว ไม่โชว์กรอบบนหน้าไลฟ์ (เว้นแต่สั่ง show) */
+          var dk=document.getElementById('mediaDockV142');
+          if(v&&v.open===false){closeMediaDockV142();}
+          else if(v&&v.show===true){if(dk){dk.classList.remove('stealth','hidden');}}
+          else if(v&&v.show===false){if(dk)dk.classList.add('stealth');}
+          else{
+            if(v&&v.url)showMediaDockV142(v.url);else showMediaDockV142();
+            if(dk){dk.classList.remove('show-hist');dk.classList.add('stealth');}
+          }
+          break;
+        case 'guide':
+          if(v==='close'){var g=document.getElementById('guideV157');if(g&&!g.hidden)g.querySelector('.g-x').click();}
+          else if(typeof showGuideV157==='function'){
+            var gb=document.getElementById('guideV157');if(!gb||gb.hidden)showGuideV157();
+            if(v==='roll')gb.querySelector('.g-roll').click();
+            if(v&&typeof v==='object'&&v.name!==undefined){var n=gb.querySelector('.g-name');n.value=String(v.name).slice(0,40);n.dispatchEvent(new Event('input'));n.blur();}
+          }
+          break;
+        case 'snapshots':refreshSnapshots();break;
+        case 'reload':setTimeout(function(){location.reload();},300);break;
+      }
+    }catch(e){console.warn('[remote]',c,e);}
+  }
+  function handle(list,initial){
+    list=(list||[]).filter(function(c){return c&&c.id;}).sort(function(a,b){return a.id<b.id?-1:1;});
+    if(initial||lastId===null){
+      /* คำสั่งที่ส่งก่อนเปิดหน้านี้ = ของเก่า ไม่เล่นซ้ำ; ที่ส่งหลังเปิดหน้า (ระหว่างรอโหลด) ให้ทำ */
+      list.forEach(function(c){if(parseInt(c.id,10)<LOADED)done[c.id]=1;else run(c);});
+      lastId=list.length?list[list.length-1].id:'';return;
+    }
+    list.forEach(function(c){if(c.id>lastId){run(c);lastId=c.id;}});
+  }
+  function poll(){
+    if(busy)return;busy=true;
+    fetch('/api/settings',{cache:'no-store'}).then(function(r){return r.json();})
+      .then(function(res){var p=((res&&res.settings)||{})[KEY]||{};handle(p.list,lastId===null);})
+      .catch(function(){}).then(function(){busy=false;});
+  }
+  try{var bc=new BroadcastChannel('livehuay_remote_v159');
+    bc.onmessage=function(e){var c=e.data&&e.data.cmd;if(c){run(c);if(lastId!==null&&c.id>lastId)lastId=c.id;}};}catch(e){}
+  poll();setInterval(poll,4000);
+})();
+</script>
+</body>
+</html>
