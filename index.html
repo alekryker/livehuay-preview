@@ -3956,7 +3956,18 @@ function updateMarketCard(key, row){
     !rowIsTodayV94(row)
   ){
     if(topResult) topResult.textContent = '-';
-    if(bottomResult) bottomResult.textContent = '-';
+    // V168: ฮานอย — เลขล่างออกก่อน (นิ่ง 2 นาทีแล้ว) ให้โชว์ล่างก่อน เลขบนรอผลจริง
+    const early = (
+      /^hanoi_/.test(String(key||'')) &&
+      row.earlyBottomStable === true &&
+      /^\d{2}$/.test(String(row.earlyBottom||'')) &&
+      resultsVisible &&
+      String(row.resultDate||'') === operationalDateKeyV113()
+    ) ? String(row.earlyBottom) : '';
+    if(bottomResult){
+      bottomResult.textContent = early || '-';
+      if(early) bottomResult.classList.remove('waiting');
+    }
 
     if(note){
       note.textContent = 'รอผล';
