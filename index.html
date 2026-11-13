@@ -1450,10 +1450,9 @@ body{
   pointer-events:none;border-radius:inherit;background:inherit;font:inherit;letter-spacing:0;text-shadow:none}
 .l-spin i{font-style:normal;display:inline-block;min-width:.6em;text-align:center;
   color:#ffd76a;-webkit-text-fill-color:#ffd76a;text-shadow:0 0 10px rgba(255,196,48,.7),0 2px 0 rgba(60,30,0,.55);
-  font-variant-numeric:tabular-nums;animation:lSpinTick .09s linear infinite}
+  font-variant-numeric:tabular-nums}
 .l-spin i::before{content:attr(data-d)}
-@keyframes lSpinTick{from{transform:translateY(-16%);opacity:.5}to{transform:none;opacity:1}}
-@media(prefers-reduced-motion:reduce){.result.luxe-drawing,.l-spin i{animation:none !important}}
+@media(prefers-reduced-motion:reduce){.result.luxe-drawing{animation:none !important}}
 </style>
 </head>
 <body>
@@ -5367,18 +5366,33 @@ function openAdminV89(){ window.location.href='https://livehuay.netlify.app/admi
   function ndig(r){var id=r.id||'';if(/-four$/.test(id))return 4;if(/-bottom$/.test(id))return 2;return 3;}
   function rnd(){return String(Math.floor(Math.random()*10));}
   function ensureSpin(r,on){
-    var s=null;for(var i=0;i<r.children.length;i++){if(r.children[i].classList&&r.children[i].classList.contains('l-spin')){s=r.children[i];break;}}
-    if(!on){if(s)s.remove();return;}
+    var s=r.__lspin&&r.__lspin.parentNode===r?r.__lspin:null;
+    if(!s){for(var i=0;i<r.children.length;i++){if(r.children[i].classList&&r.children[i].classList.contains('l-spin')){s=r.children[i];break;}}}
+    if(!on){
+      if(s)s.remove();
+      if(r.__lobs){r.__lobs.disconnect();r.__lobs=null;}
+      r.__lspin=null;return;
+    }
     var n=ndig(r);
-    if(s&&s.children.length===n)return;
-    if(s)s.remove();
-    s=document.createElement('span');s.className='l-spin';s.setAttribute('aria-hidden','true');
-    for(var k=0;k<n;k++){var d=document.createElement('i');d.setAttribute('data-d',rnd());s.appendChild(d);}
-    /* ขนาดตัวเลขหมุน = ขนาดเลขผลจริง (คลาส waiting ลดฟอนต์เหลือ 24px จึงถอดชั่วคราวเพื่ออ่านขนาด) */
-    var w=r.classList.contains('waiting');if(w)r.classList.remove('waiting');
-    var fs=getComputedStyle(r).fontSize;if(w)r.classList.add('waiting');
-    s.style.fontSize=fs;
-    r.appendChild(s);
+    if(s&&s.children.length===n){r.__lspin=s;}
+    else{
+      if(s)s.remove();
+      s=document.createElement('span');s.className='l-spin';s.setAttribute('aria-hidden','true');
+      for(var k=0;k<n;k++){var d=document.createElement('i');d.setAttribute('data-d',rnd());s.appendChild(d);}
+      /* ขนาดตัวเลขหมุน = ขนาดเลขผลจริง (คลาส waiting ลดฟอนต์เหลือ 24px จึงถอดชั่วคราวเพื่ออ่านขนาด) */
+      var w=r.classList.contains('waiting');if(w)r.classList.remove('waiting');
+      var fs=getComputedStyle(r).fontSize;if(w)r.classList.add('waiting');
+      s.style.fontSize=fs;
+      r.appendChild(s);r.__lspin=s;
+    }
+    /* โค้ดอื่นของหน้าเว็บเขียน textContent ทับช่องผลบ่อย ๆ (ลบตัวหมุนทิ้ง) → ใส่กลับทันทีก่อนวาดภาพ ไม่ให้กะพริบ */
+    if(!r.__lobs&&window.MutationObserver){
+      r.__lobs=new MutationObserver(function(){
+        var x=r.__lspin;
+        if(x&&r.classList.contains('luxe-drawing')&&x.parentNode!==r)r.appendChild(x);
+      });
+      r.__lobs.observe(r,{childList:true});
+    }
   }
   function tick(){
     try{
